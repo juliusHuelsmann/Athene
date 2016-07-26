@@ -70,7 +70,6 @@ buildr
 # images
 *.jpeg
 *.jpg
-*.png
 
 # Other
 *.zip
