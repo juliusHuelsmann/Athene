@@ -1,3 +1,15 @@
+##
+## OS specific stuff
+##
+*~
+*.DS_Store
+*/desktop.ini
+
+##
+## Java Stuff
+##
+
+
 *.class
 
 # Mobile Tools for Java (J2ME)
@@ -10,3 +22,55 @@
 
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
+
+
+
+
+##
+## Opencv stuff
+##
+
+
+*/CMakeCache.txt
+*/CMakeLists.txt
+*/CMakeLists.txtold
+*/Makefile
+*/cmake_install.cmake
+*/.out
+*/CMakeFiles/
+
+
+
+*CMakeCache.txt
+*CMakeLists.txt
+*CMakeLists.txtold
+*Makefile
+*cmake_install.cmake
+*.out
+*CMakeFiles/
+
+# Binary directories
+build
+buildr
+
+# Editor stuff
+*.swp
+*.user
+
+# latex stuff
+*.aux
+*.bbl
+*.blg
+*.log
+*.gz
+
+# git stuff
+*.orig
+
+# images
+*.jpeg
+*.jpg
+*.png
+
+# Other
+*.zip
