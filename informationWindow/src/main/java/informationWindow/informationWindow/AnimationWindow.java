@@ -3,13 +3,13 @@ package informationWindow.informationWindow;
 import java.awt.Color;
 import java.awt.Point;
 import java.awt.image.BufferedImage;
-import java.io.File;
 import java.io.IOException;
 
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+
 
 
 /**
@@ -68,12 +68,12 @@ public class AnimationWindow extends JFrame  {
    * Whether to execute {@link #drawEnhancedAnimation()} (true) or 
    * {@link #drawSimpleAnimation()} (false).
    */
-  private boolean enhancedEnabled = !true;
+  private boolean enhancedEnabled = true;
   
   /**
    * The source image of {@link #bi_enhancedAnimationSource}.
    */
-  private final String enhancedAnimationInputSource = "../informationWindow.informationWindow/res/ani1.png";
+  private final String enhancedAnimationInputSource = "/informationWindow/informationWindow/res/ani1.png";
   
   /**
    * 
@@ -81,8 +81,8 @@ public class AnimationWindow extends JFrame  {
   public AnimationWindow() {
 
     // initialize the original width and height
-    origwidth = 200;
-    origheight = 200;
+    origwidth = 100;
+    origheight = 100;
     
     
     // adapt the settings of the Window
@@ -98,13 +98,7 @@ public class AnimationWindow extends JFrame  {
         getHeight(), BufferedImage.TYPE_INT_ARGB);
     
     if (enhancedEnabled) {
-      try {
-        bi_enhancedAnimationSource = ImageIO.read(new File(
-            enhancedAnimationInputSource));
-      } catch (IOException e) {
-        e.printStackTrace();
-        enhancedEnabled = true;
-      }
+      bi_enhancedAnimationSource = Utils.resize(enhancedAnimationInputSource, getWidth(), getHeight());
     }
     
     // initialize the animation JLabel.
@@ -132,83 +126,91 @@ public class AnimationWindow extends JFrame  {
       tr = new Thread() {
         public void run() {
 
-          final int rgb = new Color(0, 0, 0, 255).getRGB();
           final int rgbWhite = new Color(255, 255, 255).getRGB();
           
           final Point origin = new Point(getWidth() / 2, getHeight() / 2);
           Point oldBorder = new Point(-1, -1);
-          double unterteilung = 0.1;
+          double unterteilung = 0.01;
           for (double i = 0; i <= 2 * Math.PI; i= 1.0 * i + unterteilung) {
             
             Point newBorder = new Point(
-                (int) (origin.x + Math.sin(i) * getWidth()/2),
-                (int) (origin.y + Math.cos(i) * getWidth()/2));
+                (int) (origin.x + Math.sin(Math.PI - i) * getWidth()/2),
+                (int) (origin.y + Math.cos(Math.PI - i) * getHeight()/2));
             
             
             // if the old border has already been initialized
             if (oldBorder.x != -1) {
+
+              final double angleOld = Math.atan2(oldBorder.y,  oldBorder.x);
+              final double angleNew = Math.atan2(newBorder.y,  newBorder.x);
+
+              final double maxAngle = Math.max(angleOld, angleNew);
+              final double minAngle = Math.min(angleOld, angleNew);
+
+              final int minCol = Math.min(oldBorder.x, 
+                  Math.min(newBorder.x, origin.x));
+              final int maxCol = Math.max(oldBorder.x,
+                  Math.max(newBorder.x, origin.x));
+              final int minRow = Math.min(oldBorder.y, 
+                  Math.min(newBorder.y, origin.y));
+              final int maxRow = Math.max(oldBorder.y, 
+                  Math.max(newBorder.y, origin.y));
               
-            }
-            final double angleOld = Math.atan(oldBorder.x / oldBorder.y);
-            final double angleNew = Math.atan(newBorder.x / newBorder.y);
-
-            final double maxAngle = Math.max(angleOld, angleNew);
-            final double minAngle = Math.min(angleOld, angleNew);
-
-            final int minCol = Math.min(oldBorder.x, 
-                Math.min(newBorder.x, origin.x));
-            final int maxCol = Math.max(oldBorder.x,
-                Math.max(newBorder.x, origin.x));
-            final int minRow = Math.min(oldBorder.y, 
-                Math.min(newBorder.y, origin.y));
-            final int maxRow = Math.max(oldBorder.y, 
-                Math.max(newBorder.y, origin.y));
-            
-            for (int c = minCol; c < maxCol; c++) {
-              for (int r = minRow; r < maxRow; r++) {
-                
-                final double angle = Math.atan(c / r);
-                if (angle < minAngle) {
-                  continue;
-                } else if (angle > maxAngle) {
-                  continue; // not really possible to differentiate and make it quicker...
-                } else {
+              for (int c = minCol; c <= maxCol + 20; c++) {
+                for (int r = minRow; r <= maxRow + 21; r++) {
                   
-                  // Draw pixel to image
-                  final int rgbCurrent = bi_enhancedAnimationSource.getRGB(c, r);
-                  if (rgb == rgbWhite) {
+                  if (c < 0 || r < 0 
+                      || r >= bi_enhancedAnimationSource.getHeight() 
+                      || c >= bi_enhancedAnimationSource.getWidth()) {
                     continue;
+                  }
+                  
+                  final double angle = Math.atan2(r, c);
+                  if (0.1 < minAngle - angle) {
+                    continue;
+                  } else if (angle - maxAngle> 0.1) {
+                    continue; // not really possible to differentiate and make it quicker...
                   } else {
-
-                    final Color col = new Color(rgbCurrent);
-                    final Color colT = new Color(bi_animation.getRGB(c, r));
-                    final double percR = 255.0 / (255 - col.getRed());
-                    final double percG = 255.0 / (255 - col.getGreen());
-                    final double percB = 255.0 / (255 - col.getBlue());
                     
-                    final double red = col.getRed() * percR + (1 - percR) * colT.getRed();
-                    final double green = col.getGreen() * percR + (1 - percR) * colT.getGreen();
-                    final double blue = col.getBlue() * percR + (1 - percR) * colT.getBlue();
-                    Color col2use = new Color(
-                        (int) (red),
-                        (int) (green),
-                        (int) (blue));
-                    bi_animation.setRGB(c, r, col2use.getRGB());
+                    // Draw pixel to image
+                    final int rgbCurrent = bi_enhancedAnimationSource.getRGB(c, r);
+                    if (rgbCurrent == rgbWhite) {
+                      continue;
+                    } else {
+
+                      final Color col = new Color(rgbCurrent);
+                      final Color colT = new Color(bi_animation.getRGB(c, r));
+                      final double percR = 255.0 / (255 - col.getRed());
+                      final double percG = 255.0 / (255 - col.getGreen());
+                      final double percB = 255.0 / (255 - col.getBlue());
+                      
+                      final double red = Math.min(255, 
+                          col.getRed() * percR + (1 - percR) * colT.getRed());
+                      final double green = Math.min(255, 
+                          col.getGreen() * percG + (1 - percG) * colT.getGreen());
+                      final double blue = Math.min(255, 
+                          col.getBlue() * percB + (1 - percB) * colT.getBlue());
+                      Color col2use = new Color(
+                          (int) (red),
+                          (int) (green),
+                          (int) (blue));
+                      bi_animation.setRGB(c, r, col2use.getRGB());
+                    }
                   }
                 }
               }
-            }
-            
+              
 
-            jlbl_animation.setIcon(new ImageIcon(bi_animation));
-            jlbl_animation.repaint();
-            try {
-              Thread.sleep((long) (mindif / (2.0 * Math.PI / unterteilung)));
-            } catch (InterruptedException e) {
-              interrupt();
-              tr = null;
+              jlbl_animation.setIcon(new ImageIcon(bi_animation));
+              jlbl_animation.repaint();
+              try {
+                Thread.sleep((long) (mindif / (2.0 * Math.PI / unterteilung)));
+              } catch (InterruptedException e) {
+                interrupt();
+                tr = null;
+              }
+              
             }
-            
             
             oldBorder = newBorder;
           }

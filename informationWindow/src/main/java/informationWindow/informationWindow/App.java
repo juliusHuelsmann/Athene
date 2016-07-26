@@ -156,7 +156,7 @@ public class App extends JFrame implements MouseListener, MouseMotionListener, M
     }
     private long pTimestamp = 0;
     private long rTimestamp = 0;
-    private long mindifference = 400;
+    private long mindifference = 200;
     
     
     //TODO: check if mouse has been moved. In that case, exit the oepration
