@@ -27,7 +27,8 @@ import javax.swing.JWindow;
  * Hello world!
  *
  */
-public class App extends JWindow implements MouseListener, MouseMotionListener, MouseWheelListener {
+public class App extends JWindow implements MouseListener, 
+MouseMotionListener, MouseWheelListener {
  
   private AnimationWindow animation;
   

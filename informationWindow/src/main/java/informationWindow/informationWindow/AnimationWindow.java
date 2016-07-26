@@ -2,6 +2,7 @@ package informationWindow.informationWindow;
 
 import java.awt.Color;
 import java.awt.Point;
+import java.awt.Toolkit;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 
@@ -291,6 +292,8 @@ public class AnimationWindow extends JFrame  {
       int imgx, int imgy, 
       int i, int j, final long mindifference,  BufferedImage bi) {
 
+    
+//    new BufferedViewer().show(bi);
     final int minx = Math.min(imgx, i);
     final int maxx = Math.max(imgx, i);
     final int miny = Math.min(imgy, j);
@@ -319,12 +322,13 @@ public class AnimationWindow extends JFrame  {
     }
     
     super.setLocation(i, j);
-    super.setSize(width, height);
+    this.setSize(width, height);
     
     this.mindif = mindifference;
     
     bi_animation = bi.getSubimage(imgx, imgy, getWidth(), getHeight());
     
+    // What remains to update is the #bi_enhancedAnimationSource.
     if (getWidth() > bi_enhancedAnimationSource.getWidth()
         || getHeight() > bi_enhancedAnimationSource.getHeight()) {
       // neu laden
@@ -345,6 +349,9 @@ public class AnimationWindow extends JFrame  {
       }
     }
     jlbl_animation.setIcon(new ImageIcon(bi_animation));
+//    BufferedViewer bw = new BufferedViewer();
+//    bw.show(bi_animation);
+//    bw.setLocation((int)Toolkit.getDefaultToolkit().getScreenSize().getWidth() - bw.getWidth(), 50);
   }
   /**
    * {@inheritDoc}
