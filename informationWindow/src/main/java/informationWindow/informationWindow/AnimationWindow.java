@@ -40,7 +40,7 @@ public class AnimationWindow extends JFrame  {
    * The source image that contains the rough enhanced animation that is
    * taken and drawn on top of the {@link #bi_animation}.
    */
-  private BufferedImage bi_enhancedAnimationSource;
+  private BufferedImage bi_enhancedAnimationSource, bi_enhancedAnimationSourceCopy;
   
   /**
    * Thread that 
@@ -99,7 +99,10 @@ public class AnimationWindow extends JFrame  {
         getHeight(), BufferedImage.TYPE_INT_ARGB);
     
     if (enhancedEnabled) {
-      bi_enhancedAnimationSource = Utils.resize(enhancedAnimationInputSource, getWidth(), getHeight());
+
+      bi_enhancedAnimationSourceCopy = Utils.resize(enhancedAnimationInputSource, 
+          origwidth, origheight);
+      bi_enhancedAnimationSource = bi_enhancedAnimationSourceCopy.getSubimage(0, 0, bi_enhancedAnimationSourceCopy.getWidth(), bi_enhancedAnimationSourceCopy.getHeight());
     }
     
     // initialize the animation JLabel.
@@ -302,23 +305,28 @@ public class AnimationWindow extends JFrame  {
     int width = origwidth;
     int height = origheight;
 
+    int xdiff = 0, ydiff = 0, wdiff = 0, hdiff = 0;
+    
     if (minx < 0) {
+      xdiff = -minx;
       imgx -= minx;
       i -= minx;
       width += minx;
     } 
     if (maxx + width > bi.getWidth()) {
-      final int difference = maxx + width - bi.getWidth();
-      width -= difference;
+      
+      wdiff = maxx + width - bi.getWidth();
+      width -= wdiff;
     }
     if (miny < 0) {
+      ydiff = -miny;
       imgy -= miny;
       j -= miny;
       height += miny;
     } 
     if (maxy + height > bi.getHeight()) {
-      final int difference = maxy + height - bi.getHeight();
-      height -= difference;
+      hdiff = maxy + height - bi.getHeight();
+      height -= hdiff;
     }
     
     super.setLocation(i, j);
@@ -329,13 +337,12 @@ public class AnimationWindow extends JFrame  {
     bi_animation = bi.getSubimage(imgx, imgy, getWidth(), getHeight());
     
     // What remains to update is the #bi_enhancedAnimationSource.
-    if (getWidth() > bi_enhancedAnimationSource.getWidth()
-        || getHeight() > bi_enhancedAnimationSource.getHeight()) {
+    if (origwidth !=  bi_enhancedAnimationSource.getWidth()
+        || origheight != bi_enhancedAnimationSource.getHeight()) {
       // neu laden
 
       if (enhancedEnabled) {
-        bi_enhancedAnimationSource = Utils.resize(enhancedAnimationInputSource, 
-            origwidth, origheight);
+        bi_enhancedAnimationSource = bi_enhancedAnimationSourceCopy.getSubimage(0, 0, bi_enhancedAnimationSourceCopy.getWidth(), bi_enhancedAnimationSourceCopy.getHeight());
       }
     } 
     
@@ -344,8 +351,7 @@ public class AnimationWindow extends JFrame  {
       if (enhancedEnabled) {
 
         bi_enhancedAnimationSource = bi_enhancedAnimationSource.getSubimage(
-            origwidth - getWidth(), origheight - getHeight(),
-            getWidth(), getHeight());
+            xdiff, ydiff, origwidth - wdiff - xdiff, origheight - hdiff - ydiff);
       }
     }
     jlbl_animation.setIcon(new ImageIcon(bi_animation));
