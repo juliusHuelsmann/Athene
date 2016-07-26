@@ -88,6 +88,10 @@ public class App extends JWindow implements MouseListener, MouseMotionListener, 
      * set FullscreenMode.
      */
     public void mouseClicked(MouseEvent e) {
+      
+      if (dragged) {
+        return;
+      }
       System.out.println(pTimestamp);
       System.out.println(rTimestamp);
       
@@ -99,7 +103,7 @@ public class App extends JWindow implements MouseListener, MouseMotionListener, 
         // no action, let the robot take care of this
         System.out.println("click");
         setVisible(false);
-        
+
         final int val;
         switch(e.getButton()) {
         case MouseEvent.BUTTON1:
@@ -112,7 +116,7 @@ public class App extends JWindow implements MouseListener, MouseMotionListener, 
           val = InputEvent.BUTTON3_DOWN_MASK;
           break;
         default:
-        	val = InputEvent.BUTTON1_DOWN_MASK;
+          val = InputEvent.BUTTON1_DOWN_MASK;
         }
  
         new Thread() {
@@ -144,7 +148,7 @@ public class App extends JWindow implements MouseListener, MouseMotionListener, 
     
     //TODO: check if mouse has been moved. In that case, exit the oepration
     public void mousePressed(MouseEvent e) {
-      System.out.println(e.getSource());
+      dragged = false;
       BufferedImage bi = r.createScreenCapture(getBounds());
       currentClicknumber++;
       it = new ImageTupel(bi, currentClicknumber);
@@ -172,10 +176,33 @@ public class App extends JWindow implements MouseListener, MouseMotionListener, 
     }
     private Thread t_displayTimeout;
     public void mouseReleased(MouseEvent e) {
-      rTimestamp = System.currentTimeMillis();
-  	t_displayTimeout.interrupt();
-      animation.setVisible(false);
-      setVisible(true);
+      if (dragged) {
+        setVisible(false);
+
+        final int val;
+        switch(e.getButton()) {
+        case MouseEvent.BUTTON1:
+          val = InputEvent.BUTTON1_DOWN_MASK;
+          break;
+        case MouseEvent.BUTTON2:
+          val = InputEvent.BUTTON2_DOWN_MASK;
+          break;
+        case MouseEvent.BUTTON3:
+          val = InputEvent.BUTTON3_DOWN_MASK;
+          break;
+        default:
+          val = InputEvent.BUTTON1_DOWN_MASK;
+        }
+        r.mousePress(val);
+        setVisible(true);
+      } else {
+
+        rTimestamp = System.currentTimeMillis();
+        t_displayTimeout.interrupt();
+        animation.setVisible(false);
+        setVisible(true);
+        System.out.println("mousereleased");
+      }
     }
     public void mouseEntered(MouseEvent e) {
       
@@ -184,17 +211,30 @@ public class App extends JWindow implements MouseListener, MouseMotionListener, 
       
     }
     public void mouseDragged(MouseEvent e) {
-      if (e.getLocationOnScreen().equals(savedLocation)) {
-    	  System.out.println("interrupt");
+      dragged = true;
         t_displayTimeout.interrupt();
-        animation.setVisible(false);
         it = null;
+        animation.setVisible(false);
         setVisible(false);
-      } else {
-    	  System.out.println("does not equal");
-      }
-    
+
+        final int val;
+        switch(e.getButton()) {
+        case MouseEvent.BUTTON1:
+          val = InputEvent.BUTTON1_DOWN_MASK;
+          break;
+        case MouseEvent.BUTTON2:
+          val = InputEvent.BUTTON2_DOWN_MASK;
+          break;
+        case MouseEvent.BUTTON3:
+          val = InputEvent.BUTTON3_DOWN_MASK;
+          break;
+        default:
+          val = InputEvent.BUTTON1_DOWN_MASK;
+        }
+        r.mousePress(val);
+        setVisible(true);
     }
+    private boolean dragged = false;
     private Point savedLocation;
     public void mouseMoved(MouseEvent e) {}
     private Thread t;

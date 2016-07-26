@@ -288,29 +288,88 @@ public class AnimationWindow extends JFrame  {
   }
   private long mindif;
   public void prepare(
-      final int imgx, final int imgy, 
+      int imgx, int imgy, 
       int i, int j, final long mindifference,  BufferedImage bi) {
+
+    final int minx = Math.min(imgx, i);
+    final int maxx = Math.max(imgx, i);
+    final int miny = Math.min(imgy, j);
+    final int maxy = Math.max(imgy, j);
+    
+    int width = origwidth;
+    int height = origheight;
+
+    if (minx < 0) {
+      imgx -= minx;
+      i -= minx;
+      width += minx;
+    } 
+    if (maxx + width > bi.getWidth()) {
+      final int difference = maxx + width - bi.getWidth();
+      width -= difference;
+    }
+    if (miny < 0) {
+      imgy -= miny;
+      j -= miny;
+      height += miny;
+    } 
+    if (maxy + height > bi.getHeight()) {
+      final int difference = maxy + height - bi.getHeight();
+      height -= difference;
+    }
+    
     super.setLocation(i, j);
+    super.setSize(width, height);
+    
     this.mindif = mindifference;
-    int imgxx = imgx;
-    int imgxy = imgy;
-    if (i <= 0) {
-      setSize(origwidth + i, getHeight());
-      imgxx += i;
-      i =0;
-    } else {
-      setSize(origwidth, getHeight());
+    
+    bi_animation = bi.getSubimage(imgx, imgy, getWidth(), getHeight());
+    
+    if (getWidth() > bi_enhancedAnimationSource.getWidth()
+        || getHeight() > bi_enhancedAnimationSource.getHeight()) {
+      // neu laden
+
+      if (enhancedEnabled) {
+        bi_enhancedAnimationSource = Utils.resize(enhancedAnimationInputSource, 
+            origwidth, origheight);
+      }
+    } 
+    
+    if (getWidth() != bi_enhancedAnimationSource.getWidth()
+        || getHeight() != bi_enhancedAnimationSource.getHeight()) {
+      if (enhancedEnabled) {
+
+        bi_enhancedAnimationSource = bi_enhancedAnimationSource.getSubimage(
+            origwidth - getWidth(), origheight - getHeight(),
+            getWidth(), getHeight());
+      }
     }
-    if (j <= 0) {
-      setSize(getWidth(), origheight + j);
-      imgxy += j;
-      i =0;
-    } else {
-      setSize(getWidth(), origheight);
-    }
-    bi_animation = bi.getSubimage(imgxx, imgxy, getWidth(), getHeight());
     jlbl_animation.setIcon(new ImageIcon(bi_animation));
   }
-  
+  /**
+   * {@inheritDoc}
+   * <p>
+   * The {@code width} and {@code height} values
+   * are automatically enlarged if either is less than
+   * the minimum size as specified by previous call to
+   * {@code setMinimumSize}.
+   * <p>
+   * The method changes the geometry-related data. Therefore,
+   * the native windowing system may ignore such requests, or it may modify
+   * the requested data, so that the {@code Window} object is placed and sized
+   * in a way that corresponds closely to the desktop settings.
+   *
+   * @see #getSize
+   * @see #setBounds
+   * @see #setMinimumSize
+   * @since 1.6
+   */
+  @Override
+  public void setSize(int width, int height) {
+      if (jlbl_animation != null) {
+        jlbl_animation.setSize(width, height);
+      }
+      super.setSize(width, height);
+  }
   
 }
