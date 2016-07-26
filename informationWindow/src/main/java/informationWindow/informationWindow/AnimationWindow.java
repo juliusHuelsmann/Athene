@@ -156,8 +156,8 @@ public class AnimationWindow extends JFrame  {
               final int maxRow = Math.max(oldBorder.y, 
                   Math.max(newBorder.y, origin.y));
               
-              for (int c = minCol; c <= maxCol + 20; c++) {
-                for (int r = minRow; r <= maxRow + 21; r++) {
+              for (int c = minCol; c <= maxCol + getWidth() / 10; c++) {
+                for (int r = minRow; r <= maxRow + getHeight() / 10; r++) {
                   
                   if (c < 0 || r < 0 
                       || r >= bi_enhancedAnimationSource.getHeight() 
