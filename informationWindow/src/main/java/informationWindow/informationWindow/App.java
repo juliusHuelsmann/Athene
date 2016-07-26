@@ -53,7 +53,14 @@ MouseMotionListener, MouseWheelListener {
 //    setUndecorated(true);
  // Apply a transparent color to the background
  // This is ALL important, without this, it won't work!
-    setBackground(new Color(0, 255, 0, 1));
+    final int alpha;
+    final boolean windows = false;
+    if (windows) {
+    	alpha = 1;
+    } else {
+    	alpha = 0;
+    }
+    setBackground(new Color(0, 255, 0, alpha));
     setVisible(true);
     setSize(Toolkit.getDefaultToolkit().getScreenSize());
     addMouseListener(this);
@@ -88,7 +95,7 @@ MouseMotionListener, MouseWheelListener {
     /**
      * set FullscreenMode.
      */
-    public void mouseClicked(MouseEvent e) {
+    public void mouseClicked(final MouseEvent e) {
       
       if (dragged) {
         return;
@@ -119,24 +126,31 @@ MouseMotionListener, MouseWheelListener {
         default:
           val = InputEvent.BUTTON1_DOWN_MASK;
         }
- 
+
         new Thread() {
         	public void run() {
+        		try {
+					Thread.sleep(100);
+				} catch (InterruptedException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
 
+        		System.out.println("diff" + (e.getXOnScreen() - e.getX()));
+        		System.out.println("diff" + (e.getYOnScreen() - e.getY()));
+        		r.mouseMove(e.getXOnScreen(), e.getYOnScreen());
                 r.mousePress(val);
                 r.mouseRelease(val);   
+        		final long s = System.currentTimeMillis();
+        		System.out.println("r starts");
                 r.waitForIdle();
+                System.out.println("r is ready" + (System.currentTimeMillis() - s));
+                
+                setVisible(true);
         	}
  
         } .start();
         	
-        try {
-			Thread.sleep(200);
-		} catch (InterruptedException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
-        setVisible(true);
       }
       
       pTimestamp = 0;
