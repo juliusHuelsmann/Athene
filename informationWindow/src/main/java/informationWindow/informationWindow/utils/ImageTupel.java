@@ -1,4 +1,4 @@
-package informationWindow.informationWindow;
+package informationWindow.informationWindow.utils;
 
 import java.awt.image.BufferedImage;
 

@@ -1,15 +1,10 @@
-package informationWindow.informationWindow;
+package informationWindow.informationWindow.view;
 
-import java.awt.AWTEvent;
+
 import java.awt.AWTException;
 import java.awt.Color;
-import java.awt.Graphics;
-import java.awt.GraphicsDevice;
-import java.awt.GraphicsEnvironment;
-import java.awt.Insets;
-import java.awt.MouseInfo;
 import java.awt.Point;
-import java.awt.PointerInfo;
+import java.awt.Rectangle;
 import java.awt.Robot;
 import java.awt.Toolkit;
 import java.awt.event.InputEvent;
@@ -19,17 +14,27 @@ import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
 import java.awt.image.BufferedImage;
-
-import javax.swing.JFrame;
-import javax.swing.JLabel;
 import javax.swing.JWindow;
+
+import informationWindow.informationWindow.utils.ImageTupel;
+import utils.UtilitiesSystem;
+
+
 /**
- * Hello world!
+ * The overlay window that is used for capturing the clicks.
  *
+ * @author Julius Huelsmann
+ * @version %I%, %U%
+ * @since 0.0
  */
-public class App extends JWindow implements MouseListener, 
+@SuppressWarnings("serial")
+public class Overlay extends JWindow implements MouseListener, 
 MouseMotionListener, MouseWheelListener {
  
+  
+  /**
+   * The window which displays the animation.
+   */
   private AnimationWindow animation;
   
   /**
@@ -43,7 +48,7 @@ MouseMotionListener, MouseWheelListener {
    */
   private int currentClicknumber;
   
-  public App() {
+  public Overlay() {
     try {
       r = new Robot();
     } catch (AWTException e1) {
@@ -54,11 +59,11 @@ MouseMotionListener, MouseWheelListener {
  // Apply a transparent color to the background
  // This is ALL important, without this, it won't work!
     final int alpha;
-    final boolean windows = false;
+    final boolean windows = UtilitiesSystem.isWindows();
     if (windows) {
-    	alpha = 1;
+      alpha = 1;
     } else {
-    	alpha = 0;
+      alpha = 0;
     }
     setBackground(new Color(0, 255, 0, alpha));
     setVisible(true);
@@ -88,7 +93,7 @@ MouseMotionListener, MouseWheelListener {
   
   }
     public static void main( String[] args )
-    {new App();}
+    {new Overlay();}
 
     private Robot r ;
     
@@ -128,29 +133,29 @@ MouseMotionListener, MouseWheelListener {
         }
 
         new Thread() {
-        	public void run() {
-        		try {
-					Thread.sleep(100);
-				} catch (InterruptedException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-				}
+          public void run() {
+            try {
+          Thread.sleep(100);
+        } catch (InterruptedException e1) {
+          // TODO Auto-generated catch block
+          e1.printStackTrace();
+        }
 
-        		System.out.println("diff" + (e.getXOnScreen() - e.getX()));
-        		System.out.println("diff" + (e.getYOnScreen() - e.getY()));
-        		r.mouseMove(e.getXOnScreen(), e.getYOnScreen());
+            System.out.println("diff" + (e.getXOnScreen() - e.getX()));
+            System.out.println("diff" + (e.getYOnScreen() - e.getY()));
+            r.mouseMove(e.getXOnScreen(), e.getYOnScreen());
                 r.mousePress(val);
                 r.mouseRelease(val);   
-        		final long s = System.currentTimeMillis();
-        		System.out.println("r starts");
+            final long s = System.currentTimeMillis();
+            System.out.println("r starts");
                 r.waitForIdle();
                 System.out.println("r is ready" + (System.currentTimeMillis() - s));
                 
                 setVisible(true);
-        	}
+          }
  
         } .start();
-        	
+          
       }
       
       pTimestamp = 0;
@@ -164,7 +169,12 @@ MouseMotionListener, MouseWheelListener {
     //TODO: check if mouse has been moved. In that case, exit the oepration
     public void mousePressed(MouseEvent e) {
       dragged = false;
-      BufferedImage bi = r.createScreenCapture(getBounds());
+      System.out.println("xx" + getX());
+      System.out.println(getY());
+      
+      setVisible(false); // if linux that is necessary
+      final BufferedImage bi = r.createScreenCapture(getBounds());
+      setVisible(true);
       currentClicknumber++;
       it = new ImageTupel(bi, currentClicknumber);
       savedLocation = e.getLocationOnScreen();
@@ -179,7 +189,7 @@ MouseMotionListener, MouseWheelListener {
           try {
             Thread.sleep(300);
             if (!isInterrupted()) {
-          	  System.out.println("launch animation");
+              System.out.println("launch animation");
 
               animation.setVisible(true);
             }
