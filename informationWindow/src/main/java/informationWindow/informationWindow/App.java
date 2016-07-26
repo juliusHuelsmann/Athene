@@ -22,11 +22,12 @@ import java.awt.image.BufferedImage;
 
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JWindow;
 /**
  * Hello world!
  *
  */
-public class App extends JFrame implements MouseListener, MouseMotionListener, MouseWheelListener {
+public class App extends JWindow implements MouseListener, MouseMotionListener, MouseWheelListener {
  
   private AnimationWindow animation;
   
@@ -48,16 +49,17 @@ public class App extends JFrame implements MouseListener, MouseMotionListener, M
       // TODO Auto-generated catch block
       e1.printStackTrace();
     }
-    setUndecorated(true);
+//    setUndecorated(true);
  // Apply a transparent color to the background
  // This is ALL important, without this, it won't work!
-    setBackground(new Color(0, 255, 0, 0));
+    setBackground(new Color(0, 255, 0, 1));
     setVisible(true);
     setSize(Toolkit.getDefaultToolkit().getScreenSize());
     addMouseListener(this);
     addMouseMotionListener(this);
     super.addMouseWheelListener(this);
     setAlwaysOnTop(true);
+    setFocusable(false);
 //    setFullscreen();
     animation = new AnimationWindow();
     
@@ -85,41 +87,6 @@ public class App extends JFrame implements MouseListener, MouseMotionListener, M
     /**
      * set FullscreenMode.
      */
-    public void setFullscreen() {
-
-      //initialize instances
-          GraphicsEnvironment ge 
-          = GraphicsEnvironment.getLocalGraphicsEnvironment();
-          GraphicsDevice device 
-          = ge.getDefaultScreenDevice();
-   
-          //if fullScreen modus is supported
-          if (device.isFullScreenSupported()) {
-              if (!isUndecorated()) {
-
-                  setUndecorated(true);
-              }
-              device.setFullScreenWindow(this);
-          } else {
-              device.setFullScreenWindow(null);
-          }
-          
-          repaint();
-          setVisible(false);
-          dispose();
-          setUndecorated(false);
-          repaint();
-      
-          if (isDisplayable()) {
-              setVisible(false);
-              dispose();
-          }
-          setUndecorated(true);
-          repaint();
-          
-          device.setFullScreenWindow(this);
-          setVisible(false);
-    }
     public void mouseClicked(MouseEvent e) {
       System.out.println(pTimestamp);
       System.out.println(rTimestamp);
@@ -133,7 +100,7 @@ public class App extends JFrame implements MouseListener, MouseMotionListener, M
         System.out.println("click");
         setVisible(false);
         
-        int val = 0;
+        final int val;
         switch(e.getButton()) {
         case MouseEvent.BUTTON1:
           val = InputEvent.BUTTON1_DOWN_MASK;
@@ -144,10 +111,26 @@ public class App extends JFrame implements MouseListener, MouseMotionListener, M
         case MouseEvent.BUTTON3:
           val = InputEvent.BUTTON3_DOWN_MASK;
           break;
+        default:
+        	val = InputEvent.BUTTON1_DOWN_MASK;
         }
-        
-        r.mousePress(val);
-        r.mouseRelease(val);
+ 
+        new Thread() {
+        	public void run() {
+
+                r.mousePress(val);
+                r.mouseRelease(val);   
+                r.waitForIdle();
+        	}
+ 
+        } .start();
+        	
+        try {
+			Thread.sleep(200);
+		} catch (InterruptedException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
         setVisible(true);
       }
       
@@ -177,6 +160,7 @@ public class App extends JFrame implements MouseListener, MouseMotionListener, M
           try {
             Thread.sleep(300);
             if (!isInterrupted()) {
+          	  System.out.println("launch animation");
 
               animation.setVisible(true);
             }
@@ -189,6 +173,7 @@ public class App extends JFrame implements MouseListener, MouseMotionListener, M
     private Thread t_displayTimeout;
     public void mouseReleased(MouseEvent e) {
       rTimestamp = System.currentTimeMillis();
+  	t_displayTimeout.interrupt();
       animation.setVisible(false);
       setVisible(true);
     }
@@ -200,10 +185,13 @@ public class App extends JFrame implements MouseListener, MouseMotionListener, M
     }
     public void mouseDragged(MouseEvent e) {
       if (e.getLocationOnScreen().equals(savedLocation)) {
+    	  System.out.println("interrupt");
         t_displayTimeout.interrupt();
         animation.setVisible(false);
         it = null;
         setVisible(false);
+      } else {
+    	  System.out.println("does not equal");
       }
     
     }
@@ -221,7 +209,7 @@ public class App extends JFrame implements MouseListener, MouseMotionListener, M
       t = new Thread () {
         public void run(){
           try {
-            r.mouseWheel(3 * -e.getWheelRotation());
+            r.mouseWheel(3 * e.getWheelRotation());
             Thread.sleep(500);
             for (int i = 5; i > 0; i--) {
 
