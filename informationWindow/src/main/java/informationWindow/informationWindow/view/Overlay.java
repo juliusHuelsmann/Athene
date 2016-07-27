@@ -105,8 +105,6 @@ MouseMotionListener, MouseWheelListener {
       if (dragged) {
         return;
       }
-      System.out.println(pTimestamp);
-      System.out.println(rTimestamp);
       
       if (rTimestamp - pTimestamp > mindifference) {
         // action (look up word)
@@ -135,25 +133,20 @@ MouseMotionListener, MouseWheelListener {
         new Thread() {
           public void run() {
             try {
-          Thread.sleep(100);
-        } catch (InterruptedException e1) {
-          // TODO Auto-generated catch block
-          e1.printStackTrace();
-        }
-
-            System.out.println("diff" + (e.getXOnScreen() - e.getX()));
-            System.out.println("diff" + (e.getYOnScreen() - e.getY()));
+              Thread.sleep(100);
+            } catch (InterruptedException e1) {
+              // TODO Auto-generated catch block
+              e1.printStackTrace();
+            }
+            
             r.mouseMove(e.getXOnScreen(), e.getYOnScreen());
-                r.mousePress(val);
-                r.mouseRelease(val);   
+            r.mousePress(val);
+            r.mouseRelease(val);   
             final long s = System.currentTimeMillis();
-            System.out.println("r starts");
-                r.waitForIdle();
-                System.out.println("r is ready" + (System.currentTimeMillis() - s));
+            r.waitForIdle();
                 
-                setVisible(true);
+            setVisible(true);
           }
- 
         } .start();
           
       }
@@ -168,10 +161,8 @@ MouseMotionListener, MouseWheelListener {
     
     //TODO: check if mouse has been moved. In that case, exit the oepration
     public void mousePressed(MouseEvent e) {
-      dragged = false;
-      System.out.println("xx" + getX());
-      System.out.println(getY());
       
+      dragged = false;
       setVisible(false); // if linux that is necessary
       final BufferedImage bi = r.createScreenCapture(getBounds());
       setVisible(true);
@@ -187,7 +178,7 @@ MouseMotionListener, MouseWheelListener {
       t_displayTimeout = new Thread() {
         public void run() {
           try {
-            Thread.sleep(300);
+            Thread.sleep(900);
             if (!isInterrupted()) {
               System.out.println("launch animation");
 

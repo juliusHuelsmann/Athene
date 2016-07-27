@@ -2,17 +2,10 @@ package informationWindow.informationWindow.view;
 
 import java.awt.Color;
 import java.awt.Point;
-import java.awt.Toolkit;
 import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
-
-import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-
-import informationWindow.informationWindow.utils.BufferedViewer;
 import informationWindow.informationWindow.utils.Utils;
 
 
@@ -299,19 +292,6 @@ public class AnimationWindow extends JFrame  {
       int imgx, int imgy, 
       int i, int j, final long mindifference,  BufferedImage bi) {
 
-//	  for(int textx = 0; textx < bi.getWidth(); textx++) {
-//
-//		  for(int texty = 0; texty < bi.getHeight(); texty++) {
-//			  final Color c = new Color(bi.getRGB(textx, texty));
-//			  final int r = c.getRed();
-//			  final int g = c.getGreen();
-//			  final int b = c.getBlue();
-//			  if (r != 0 || g != 0 || b != 0) {
-//
-//				  System.out.println("Red: \t" + r + "\t green\t" + g + "\tblue\t" + b);  
-//			  }
-//		  }  
-//	  }
     final int minx = Math.min(imgx, i);
     final int maxx = Math.max(imgx, i);
     final int miny = Math.min(imgy, j);
@@ -370,13 +350,6 @@ public class AnimationWindow extends JFrame  {
       }
     }
 
-	  try {
-			ImageIO.write(bi, "png", new File("output.png"));
-			ImageIO.write(bi_animation, "png", new File("outputc.png"));
-	} catch (IOException e) {
-		// TODO Auto-generated catch block
-		e.printStackTrace();
-	}
     
     jlbl_animation.setIcon(new ImageIcon(bi_animation));
 //    BufferedViewer bw = new BufferedViewer();
