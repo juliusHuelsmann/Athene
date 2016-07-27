@@ -32,7 +32,6 @@ hs_err_pid*
 
 
 */CMakeCache.txt
-*/CMakeLists.txt
 */CMakeLists.txtold
 */Makefile
 */cmake_install.cmake
@@ -42,7 +41,6 @@ hs_err_pid*
 
 
 *CMakeCache.txt
-*CMakeLists.txt
 *CMakeLists.txtold
 *Makefile
 *cmake_install.cmake
