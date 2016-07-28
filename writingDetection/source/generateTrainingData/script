@@ -1,0 +1,6 @@
+#!/bin/bash
+
+rm gtd.out
+cmake .
+make 
+./gtd.out
