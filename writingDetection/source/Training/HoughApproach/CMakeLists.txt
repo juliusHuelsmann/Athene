@@ -16,7 +16,7 @@ include_directories("${PROJECT_BINARY_DIR}")
 
 # add the executable
 # and link OpenCV Lib.
-add_executable(preparation.out Testmain.cpp CharPreparationSpace.h ../Utils/Constants.h CharPreparationSpace.cpp ../Utils/Utils.h ../Utils/Utils.cpp)
+add_executable(preparation.out Testmain.cpp CharPreparationSpace.h ../../Utils/Constants.h CharPreparationSpace.cpp ../../Utils/Utils.h ../../Utils/Utils.cpp)
 target_link_libraries( preparation.out ${OpenCV_LIBS})
 
 

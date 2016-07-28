@@ -2,13 +2,13 @@
 
 #include "CharPreparationSpace.h"
 #include <string>
-#include "../Utils/Utils.h"
-#include "../Utils/Constants.h"
+#include "../../Utils/Utils.h"
+#include "../../Utils/Constants.h"
 
 CharPreparationSpace testCreation(int w, int h) {
 
   Vec2d size = Vec2d(w, h);
-  std:: string name = "../../probe1/chars/small/e.png";
+  std:: string name = "../../../probe1/chars/small/e.png";
   return CharPreparationSpace(size, name, 'e');  
   
 }
@@ -28,7 +28,7 @@ void testDetection() {
   // a) load image
   // b) calc directional gradient
   // c) perform DFT
-  std:: string detectionPath = "../../testimg/detection2.png";
+  std:: string detectionPath = "../../../testimg/detection2.png";
   Mat testImg = imread(detectionPath, 0);
   
   // hier muss noch gradimg gemacht werden

@@ -3,37 +3,13 @@
 // Author      : Julius Huelsmann
 // Version     : 0.0
 // Description : Header file of the class CharPreparationSpace that contains the
-//               functionality for generating a scale / and rotation invariant
-//               hough voting space for one character
-//               that may be used for direct corollation 
-//               approach to hough voting. 
-// 
-//               Requires:
-//                 a) Size of the image that is to be generated
-//                 b) Different scales, rotations 
-//                 c) Path to the sample image data (vector<String>)  
-//               Computes:
-//                 i) vector<vector <Mat> > hough voting space to be multiplied
-//                    with the image that is to be checked. Stores it inside
-//                    the class
-//               
+//               functionality for generating a scale invariant fourier
+//               descriptor. 
+//
 //               Is part of a c++ project that is communicating with a java
 //               program. It receives an approximate location from the java
 //               program and extracts the text that is displayed at specified
 //               location on screen.
-//
-//               Problems / Improvements
-//                 1) the program won't be able to adapt to different screen 
-//                    sizes. Once started, the program has to react to 
-//                    different monitor settings / new monitors branched
-//                    / different workspace used.
-//                 
-//                    !!! 
-//                        This has been misunderstood. I think i need to extract
-//                        snipplets. Their size differes often. Max snipplet 
-//                        size!
-//                    !!! 
-//                    
 //                 
 //============================================================================
 
@@ -46,8 +22,8 @@
   #include <opencv2/core/core.hpp>
   #include <opencv2/highgui/highgui.hpp>
   #include <fstream>
-  #include "../Utils/Constants.h"
-  #include "../Utils/Utils.h"
+  #include "../../Utils/Constants.h"
+  #include "../../Utils/Utils.h"
 
   using namespace std;
   using namespace cv;
