@@ -308,62 +308,51 @@ int main(int argc, char** argv) {
         int sum = 0;
         for (int r1 = 0; r1 < d.rows; r1++) {
         
-         sum += (d.at<uchar>(r1, c) <= 200);
+          sum += (d.at<uchar>(r1, c) <= 200);
           
         }
           
-          //
-          // from black to white
-          if((sum <= threshold2) && (oldsum > threshold2)) {
-            current[1] = c;
-            std:: cout << current[0] << ", " << current[1] << " of " << d.rows << "\n";
-            lettersRow.push_back(current);
-            
-            current = Vec2f(0, 0);
-          }
-          
-          //
-          // from white to black
-          if(sum != 0 && oldsum == 0) {
-            current[0] = c;
-          }
-          oldsum = sum;
-        
-        }
-        if (current[1] != 0) {
-          current[2] = d.cols - 1;
+        //
+        // from black to white
+        if((sum <= threshold2) && (oldsum > threshold2)) {
+          current[1] = c;
+          std:: cout << current[0] << ", " << current[1] << " of " << d.rows << "\n";
           lettersRow.push_back(current);
             
+          current = Vec2f(0, 0);
         }
-        
-        
-        
-        
-        for(int letterIndex = 0; letterIndex < lettersRow.size(); letterIndex++) {
           
-          Mat letterImg = d(Range::all(), Range(lettersRow[letterIndex][0], lettersRow[letterIndex][1]));
-        
-          int letterName = currentLetter % amountDifferentLetters; //a, b, c, ...
-          int letter = floor(currentLetter / amountDifferentLetters); //1.png, 2.png, ..
-          std:: cout << "letter " << letter << "\n";
-          if (letter == 24){// letterName == 0) {
-          
-            showImage(letterImg, names[letterName], 0);
-          }
-          
-          
-          currentLetter++;
+        //
+        // from white to black
+        if(sum != 0 && oldsum == 0) {
+          current[0] = c;
         }
+        oldsum = sum;
+        
       }
-                
-                
-                
-                
+      if (current[1] != 0) {
+        current[2] = d.cols - 1;
+        lettersRow.push_back(current);
+      }
+        
+        
+        
+        
+      for(int letterIndex = 0; letterIndex < lettersRow.size(); letterIndex++) {
+          
+        Mat letterImg = d(Range::all(), Range(lettersRow[letterIndex][0], lettersRow[letterIndex][1]));
+        
+        int letterName = currentLetter % amountDifferentLetters; //a, b, c, ...
+        int letter = floor(currentLetter / amountDifferentLetters); //1.png, 2.png, ..
+        std:: cout << "letter " << letter << "\n";
+        if (letter == 24){// letterName == 0) {
+          showImage(letterImg, names[letterName], 0);
+        }
+          
+        currentLetter++;
+      }
     }
-    exit(1);
-  
-  
-    //showImage(sources[i], "sourcei", 0);
+  }
 
   return 0;
 }
