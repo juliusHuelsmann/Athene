@@ -8,7 +8,7 @@
 
 i=0
 for f in *.png; do 
-	#echo "Processing $f file.. to $i.png" 
+	echo "Processing $f file.. to $i.png" 
 	mv "$f" "$i.png"
 	i=$[$i+1]
 done
