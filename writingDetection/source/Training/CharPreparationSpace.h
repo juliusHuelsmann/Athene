@@ -61,22 +61,37 @@
       // constructor: Stores the specified values and calls function for
       //              Computing the houghPreparation using the specified values.
 		  CharPreparationSpace(Vec2d ximgSize, vector<double> xscales, 
-		              vector<double> xrotations, string ximg);
+		              vector<double> xrotations, string ximg, char xid);
       //
       // constructor: Stores the specified values and calls function for
       //              Computing the houghPreparation using the specified values.
       //              Automatically generates suitable scales and rotations
       //              for the problem.
-		  CharPreparationSpace(Vec2d ximgSize, string ximg);
+		  CharPreparationSpace(Vec2d ximgSize, string ximg, char xid);
 		              
 		  //
 		  // destructor
 		  ~CharPreparationSpace(void){};
 		
+		  
+		  // 
+		  // For image recognition: toDetect is already fourier transformed
+		  // !
+      vector< vector<Mat> > getHoughResult(Mat toDetect);
+      void plotHoughDetectionResult(Mat& testImage, vector<Scalar>& objList);
+      void findHoughMaxima(vector< vector<Mat> >& houghSpace, vector<Scalar>& objList);
+      
       //
+      // Getter methods
+      //
+      
       // The hough voting space preparation will be stored inside this value
 		  vector<vector<Mat> > getHoughPreparation();
-		
+		  
+		  // Unimportant stuff
+      vector<double> getScales();
+      vector<double> getRotations();
+      
     private:
     
       //
@@ -89,12 +104,14 @@
       vector<double> rotations;
       Vec2d imgSize;
       Mat offlineImg;
+      char id; //The identifier of given character.
+      vector<Mat> templ;
       
       //
       // Functions for processing
       vector<Mat> makeObjectTemplate();
-      void makeFFTObjectMask(vector<Mat> templ, double scale, double angle, Mat& fftMask);
-      vector< vector<Mat> > generalHough(vector<Mat>& templ);
+      void makeFFTObjectMask(double scale, double angle, Mat& fftMask);
+      vector< vector<Mat> > generalHough();
       void preprocess();
   
       
