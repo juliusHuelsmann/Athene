@@ -90,7 +90,9 @@ void CharPreparationSpace::preprocess() {
   if (offlineImg.rows > imgSize[0] || offlineImg.cols > imgSize[1]) {
     std:: cout << "Error. The imgSize " << imgSize << " is not suitable for"
                << " the training image size " << offlineImg.rows << ", "
-               << offlineImg.cols << "." << "(needs to be >=)\n";
+               << offlineImg.cols << "." << "(needs to be >=)\n\n"
+               << "The program exits NOW. \n";
+    exit(-1);
   }
 
 
