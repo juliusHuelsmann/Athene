@@ -32,6 +32,7 @@ CharPreparationSpace::CharPreparationSpace(Vec2d ximgSize, vector<double> xscale
   // convert 8U to 32F
   this->offlineImg.convertTo(this->offlineImg, CV_32FC1);
 
+
   preprocess();
 }
 	
@@ -84,15 +85,20 @@ CharPreparationSpace::CharPreparationSpace(Vec2d ximgSize, std:: string ximg) {
 void CharPreparationSpace::preprocess() {
 
 
+  //
+  // Check if the parameters for the operation are valid
+  if (offlineImg.rows > imgSize[0] || offlineImg.cols > imgSize[1]) {
+    std:: cout << "Error. The imgSize " << imgSize << " is not suitable for"
+               << " the training image size " << offlineImg.rows << ", "
+               << offlineImg.cols << "." << "(needs to be >=)\n";
+  }
+
+
   // generate template from template image
   // templ[0] == binary image
   // templ[0] == directional gradient image
   vector<Mat> templ = makeObjectTemplate();
   
-  std:: cout << offlineImg.rows << ", " << offlineImg.cols << "\n";
-  std:: cout << templ[0].rows << ", " << templ[0].cols << "\n";
-  std:: cout << templ[1].rows << ", " << templ[1].cols << "\n";
-
   #ifdef DEBUG_CHARPREPARATIONSPACE
     showImage(templ[0], "Binary part of template", 0);
     Mat planes[2];
@@ -142,9 +148,9 @@ vector< vector<Mat> > CharPreparationSpace::generalHough(vector<Mat>& templ){
       double a = rotations[ai];
       
       #ifdef DEBUG_CHARPREPARATIONSPACE
-      std:: cout << "anlge:" << a << "\tscale" << s << "\t";
-      std:: cout << "percA:" << 100*ai/rotations.size()
-                 << "\tpercS" << 100*si/scales.size() << "\n";
+      std:: cout << "Angle:\t" << a << "\tScale:\t" << s << "\t";
+      std:: cout << "percA:\t" << 100*ai/rotations.size()
+                 << "\tpercS:\t" << 100*si/scales.size() << "\n";
       #endif
       
   
@@ -231,6 +237,7 @@ void CharPreparationSpace::makeFFTObjectMask(vector<Mat> templ, double scale, do
   Mat tempRot1 = rotateAndScale(temptemp1, angle, scale);
   
   
+  
   // STEP A2) adapt the edge directions.
   Mat matMagnitude, matAngle;
   vector<Mat> channels(2);
@@ -256,9 +263,6 @@ void CharPreparationSpace::makeFFTObjectMask(vector<Mat> templ, double scale, do
   
   
   
-  
-  
-  
 
   //////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////
@@ -269,9 +273,11 @@ void CharPreparationSpace::makeFFTObjectMask(vector<Mat> templ, double scale, do
   //                    accoring to the binary threshold computation)
   Mat ooo = Mat::zeros(fftMask.rows, fftMask.cols, CV_32FC2); 
   for (int corow = 0; corow < tempRot1.rows; corow++) {
+    
     for (int cocol = 0; cocol < tempRot1.cols; cocol++) {
       float d =(tempRot0.at<float>(corow, cocol));
-      ooo.at<Vec2f>(corow, cocol) = Vec2f(1.0 * tempRot1.at<Vec2f>(corow, cocol)[0] * d, 1.0 * tempRot1.at<Vec2f>(corow, cocol)[1] * d);
+      Vec2f nV  =Vec2f(1.0 * tempRot1.at<Vec2f>(corow, cocol)[0] * d, 1.0 * tempRot1.at<Vec2f>(corow, cocol)[1] * d);
+      ooo.at<Vec2f>(corow, cocol) = nV;
       
     }
   }
@@ -323,6 +329,13 @@ void CharPreparationSpace::makeFFTObjectMask(vector<Mat> templ, double scale, do
       Mat matRet = Mat(outputOO.rows, outputOO.cols, outputOO.type());
     
     
+  
+  #ifdef DEBUG_CHARPREPARATIONSPACE
+    Mat planes[2];
+    split(outputOO, planes);
+    showImage(planes[0], "Preprocessed img -> DFT Re", 0);
+    showImage(planes[1], "Preprocessed img -> DFT Im", 0);
+  #endif
   
   
   

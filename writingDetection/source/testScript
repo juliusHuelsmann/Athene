@@ -1,0 +1,6 @@
+#!/bin/bash
+
+rm preparation.out
+cmake .
+make
+./preparation.out
