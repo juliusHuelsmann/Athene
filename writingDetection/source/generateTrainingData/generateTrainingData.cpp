@@ -47,7 +47,7 @@ k					number of applications of the erosion operator
 */
 vector<Mat> getContourLine(Mat& img) {
 
-  int k = 2;
+  int k = 1;
   int thresh = 200;
   vector<Mat> result = vector<Mat>();
   vector<Mat> objList = vector<Mat>();
@@ -67,7 +67,7 @@ vector<Mat> getContourLine(Mat& img) {
 
 
 	//
-	// Convert the resulting matrices to 2channel floating point matrice.
+  //
 	for (int i = 0; i < objList.size(); i ++) {
 	  
 	  Mat filledMatrix = Mat::ones(img.rows, img.cols, img.type());  
@@ -114,9 +114,47 @@ vector<Mat> getContourLine(Mat& img) {
 	  
     result.push_back(filledMatrix);
     showImage(filledMatrix, "fm1", 0);
+	}
+	
+	
+	//
+	// Bubble sort
+	
+	//
+  //
+	for (int i = 0; i < objList.size(); i ++) {
+	  
   
 	}
 	
+	//
+  //
+	for (int i = 0; i < objList.size(); i ++) {
+	  
+  
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	//TODO:
+      //ordnet nach x koordinate
+      //FALLS: zu wenig px; ordne dem vorherigen zu.
+      // bastelt konturen mit zu wenig px automatisch weg.
 	
 	return result;
 	
@@ -299,42 +337,10 @@ int main(int argc, char** argv) {
       
       
       
-      // line detektieren
-      
-      
-      Vec2f current = Vec2f(0, 0);
-      int oldsum = 0;
-      for (int c = 0; c < d.cols; c++) {
-        int sum = 0;
-        for (int r1 = 0; r1 < d.rows; r1++) {
-        
-          sum += (d.at<uchar>(r1, c) <= 200);
-          
-        }
-          
-        //
-        // from black to white
-        if((sum <= threshold2) && (oldsum > threshold2)) {
-          current[1] = c;
-          std:: cout << current[0] << ", " << current[1] << " of " << d.rows << "\n";
-          lettersRow.push_back(current);
-            
-          current = Vec2f(0, 0);
-        }
-          
-        //
-        // from white to black
-        if(sum != 0 && oldsum == 0) {
-          current[0] = c;
-        }
-        oldsum = sum;
-        
-      }
-      if (current[1] != 0) {
-        current[2] = d.cols - 1;
-        lettersRow.push_back(current);
-      }
-        
+      //ordnet nach x koordinate
+      // bastelt konturen mit zu wenig px automatisch weg.
+      vector<Mat> sortedCharacterSegments = getContourLine(d);    
+              
         
         
         
