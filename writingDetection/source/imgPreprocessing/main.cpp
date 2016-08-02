@@ -207,7 +207,7 @@ void startPercecution(Mat& binResult, int row, int col, Mat orig, int& shiftRow,
 }
 
 
-void extractSegment(Mat& src_gray, int y, int x, binResult) {
+void extractSegment(Mat& src_gray, int y, int x) {
 
   edges(src_gray, src_gray);
   
@@ -227,7 +227,6 @@ void extractSegment(Mat& src_gray, int y, int x, binResult) {
   
   
   
-  Mat surrounding = Mat(
   // for displaying
   bool display = true;
   if (display) {
