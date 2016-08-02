@@ -14,6 +14,16 @@ Step 2)     get the first 'active' point next to the click location
 
 
 
+Erweiterungen:
+  A) Probabilistischer Ansatz: 
+      1) ausgewaehlter startpunkt
+      2) waehle innerhalb eines Rasters verschiedene Startpunkte.
+         Falls groesere Gebilde dazukommen (bei vielen .. )
+         dann uebernehmen
+         falls kleinere eher uebernehmen.
+         beruecksichtigen: 'groesse' der worte (quotient: cols / rows).
+
+
 
 
 */
@@ -23,6 +33,19 @@ int thresh1 = 70;
 Mat source;
 
 
+void edges(Mat src, Mat& dst) {
+
+  int edgeThresh = 1;
+  int lowThreshold = 100;
+  int const max_lowThreshold = 100;
+  int ratio = 1;
+  int kernel_size = 3;
+
+
+  /// Canny detector
+  Canny( src, dst, lowThreshold, lowThreshold*ratio, kernel_size );
+  blur( dst, dst, Size(5,1) ); // 5 15
+}
 
 
 // CV_8UC1 == binResult.type()
@@ -127,29 +150,32 @@ void startPercecution(Mat& binResult, int row, int col, Mat orig, int& shiftRow,
 
   //preprocessing. 
   binResult = 2 * Mat::ones(minus + plus, orig.cols, CV_8UC1);
-  Mat pathOrig = orig(Range(row - minus, row + plus), Range::all());
+  Mat pathOrig = source(Range(row - minus, row + plus), Range::all());
   // resize
   double ratio = 
-                  16.0
+                  14.0
                  //pathOrig.rows 
                  / pathOrig.rows;
   stretch = ratio;
   shiftRow = row - minus;
   Size dsize = Size( (int)(pathOrig.cols * ratio), (int) (pathOrig.rows * ratio)); // is swapped...
   resize(pathOrig, pathOrig, dsize);
+  
+  edges(pathOrig, pathOrig);
 
 
 
   row = (int) round(1.0 * minus * ratio);
-  
+  col = (int) round(1.0 * col * ratio);
+  bool doubledebug = false;
+  if (doubledebug) {
   for (int q = -5; q <= 5; q++) {
-    pathOrig.at<Vec3b>(row+ q, col + q) = Vec3b(0, 0, 255);
+    pathOrig.at<uchar>(row+ q, col * ratio + q) = 255;
   }
-  std:: string win0 = "hool";
+  std:: string win0 = "jk ";
   namedWindow( win0 );
   imshow( win0, pathOrig);
-  waitKey(0);
-
+  }
 
   int maxadd = 20;
   for(int i = 1; i <= maxadd; i++) {
@@ -181,19 +207,9 @@ void startPercecution(Mat& binResult, int row, int col, Mat orig, int& shiftRow,
 }
 
 
-void extractSegment(Mat& src_gray, int y, int x)
-{
-  int edgeThresh = 1;
-  int lowThreshold = 100;
-  int const max_lowThreshold = 100;
-  int ratio = 1;
-  int kernel_size = 3;
-  std::string win1 = "orig";
+void extractSegment(Mat& src_gray, int y, int x, binResult) {
 
-
-  /// Canny detector
-  Canny( src_gray, src_gray, lowThreshold, lowThreshold*ratio, kernel_size );
-  blur( src_gray, src_gray, Size(8,1) ); // 5 15
+  edges(src_gray, src_gray);
   
   Mat binResult;
   int shiftRow;
@@ -201,14 +217,17 @@ void extractSegment(Mat& src_gray, int y, int x)
   startPercecution(binResult, x, y, src_gray, shiftRow, stretchFactor);
   
   // dislike long structures. therefore: erode with more col (2nd entry)
-  int morec = 3;
+  int morec = 1;
 	erode(binResult, binResult, getStructuringElement(MORPH_RECT, Size(1, morec)));
 	dilate(binResult, binResult, getStructuringElement(MORPH_RECT, Size(1, morec)));
   int k = 5;
-  int addidil = 5;
+  int addidil = 8;
 	dilate(binResult, binResult, getStructuringElement(MORPH_RECT, Size(k + addidil, k + addidil)));
 	erode(binResult, binResult, getStructuringElement(MORPH_RECT, Size(k, k)));
   
+  
+  
+  Mat surrounding = Mat(
   // for displaying
   bool display = true;
   if (display) {
@@ -239,6 +258,7 @@ void extractSegment(Mat& src_gray, int y, int x)
     }
     
        // window
+  std::string win1 = "orig";
     namedWindow( win1, CV_WINDOW_AUTOSIZE );
     imshow( win1, result);
     waitKey(0);
@@ -257,7 +277,11 @@ void segmentHandler(int event, int x, int y, int flags, void* userdata)
   
      if  ( event == EVENT_LBUTTONDOWN )
      {
+          // Segment extrahieren
           extractSegment(src_gray, x, y);
+          
+          // alle shapes aktivieren, die punktweise da drin vorkommen
+          
      }
      else if  ( event == EVENT_RBUTTONDOWN )
      {
@@ -277,8 +301,9 @@ void segmentHandler(int event, int x, int y, int flags, void* userdata)
 
 int main(int argc, char** argv) {
 
-  source = imread("screenshot.png");
+  //source = imread("screenshot.png");
   source = imread("test2.png");
+//  source = imread("../generateTrainingData/scripts/0.png");
   
   std:: string win0 = "orig";
   namedWindow( win0 );
