@@ -10,6 +10,9 @@
   #include <fstream>
   #include "../Utils/Constants.h"
   #include "../Utils/Utils.h"
+  #include "opencv2/imgproc/imgproc.hpp"
+  #include <stdlib.h>
+  #include <stdio.h>
 
 void preprocessing(Mat ximg);
   
