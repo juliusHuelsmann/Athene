@@ -51,7 +51,7 @@ Erweiterungen:
 //
 // Destructor: Ranges all values. 
 Preprocessing::~Preprocessing() {
-  delete(source); //TODO: Test if that is okay by deleting the inst of Preproc.
+  //delete(source); //TODO: Test if that is okay by deleting the inst of Preproc.
 }
 
 
@@ -139,6 +139,8 @@ void Preprocessing::extractSegment() {
     return;
   }
   
+  //TODO: bis hier hin korrigiert.
+  exit(1);
   
   
   // dislike long structures. therefore: erode with more col (2nd entry)
@@ -190,7 +192,6 @@ void Preprocessing::extractSegment() {
     }
   }
     
-  //TODO: may yield a seg fault
   //
   // find 2nd local maximum
   // rm the values that are not allowed as maxima
@@ -240,7 +241,7 @@ void Preprocessing::extractSegment() {
     
     
     vector<Mat> shapes;
-    extractLetters(binResult, source, shapes, (this->smallSegmentRowDisplace), stretchFactor, clrThresh, geq1, geq2, geq3);
+    extractLetters(this->smallSegmentBin, source, shapes, (this->smallSegmentRowDisplace), this->smallSegmentStretch, clrThresh, geq1, geq2, geq3);
     
     Mat source2;
 	  //threshold(source, source2, 220, 255, 0);;
@@ -260,15 +261,15 @@ void Preprocessing::extractSegment() {
     //bge
     for(int i = 0; i < result.rows; i++) {
       for(int j = 0; j < result.cols; j++) {
-        int iimg = (int) ((i - (this->smallSegmentRowDisplace)) * stretchFactor);
-        int jimg = (int) ((j) * stretchFactor);
+        int iimg = (int) ((i - (this->smallSegmentRowDisplace)) * (this->smallSegmentStretch));
+        int jimg = (int) ((j) * this->smallSegmentStretch);
         int b = source2.at<uchar>(i, j);
         int g = source2.at<uchar>(i, j);
         int r = source2.at<uchar>(i, j);
         
-        if (iimg >= 0 && jimg >= 0 && iimg < binResult.rows && jimg < binResult.cols) {
+        if (iimg >= 0 && jimg >= 0 && iimg < this->smallSegmentBin.rows && jimg < this->smallSegmentBin.cols) {
           
-          int rV = (int)binResult.at<uchar>(iimg , jimg);
+          int rV = (int) this->smallSegmentBin.at<uchar>(iimg , jimg);
           if (rV == 255)  {
           
             r = min(r + 200, 255);
@@ -351,7 +352,7 @@ bool Preprocessing::startPercecution(int row, int col) {
     sum = 0;
     for (int i = -stripelength / 2; i < stripelength / 2; i++) {
       int newcol = i + col;
-      if (newcol >= 0 && newcol < orig.cols) {
+      if (newcol >= 0 && newcol < this->cran.cols) {
         sum += (int) (this->cran).at<uchar>(row - minus, newcol);
       }
     }
@@ -386,7 +387,7 @@ bool Preprocessing::startPercecution(int row, int col) {
   this->smallSegmentRowDisplace = row - minus;
   Size dsize = Size( (int)((this->smallSegmentDer).cols * (this->smallSegmentStretch)), (int) ((this->smallSegmentDer).rows * (this->smallSegmentStretch))); // is swapped...
   resize((this->smallSegmentDer), (this->smallSegmentDer), dsize);
-  this->smallSegmentBin = 2 * Mat::ones(smallSegmetDer.rows, smallSegmentDer.cols, CV_8UC1);
+  this->smallSegmentBin = 2 * Mat::ones(this->smallSegmentDer.rows, this->smallSegmentDer.cols, CV_8UC1);
   derivative((this->smallSegmentDer), (this->smallSegmentDer));
 
 
@@ -414,6 +415,7 @@ bool Preprocessing::startPercecution(int row, int col) {
               && newCol >= 0 
               && newRow < this->smallSegmentBin.rows 
               && newCol < this->smallSegmentBin.cols ) {
+              
             int valuuu = (int) ((this->smallSegmentDer).at<uchar>(newRow, newCol));
             if (valuuu >= derivThreshold) {
           
@@ -424,12 +426,6 @@ bool Preprocessing::startPercecution(int row, int col) {
               maxC = 0;
 
               percecution(this->smallSegmentBin, newRow, newCol, this->smallSegmentDer, newRow, newCol);
-              
-              minR -= (this->smallSegmentRowDisplace);
-              minR /= (this->smallSegmentStretch);
-              maxR /= (this->smallSegmentStretch);
-              minC /= (this->smallSegmentStretch);
-              maxC /= (this->smallSegmentStretch);
               return true;
             }
           }
@@ -464,23 +460,36 @@ bool Preprocessing::startPercecution(int row, int col) {
 void Preprocessing::percecution(Mat& binResult, int row, int col, Mat orig, int startRow, int startCol) {
 
 
-  // 8UC1
+  //
+  //
+  // Check if the gray value is large enough. Write the result into the bin mask.
+  // Als update the surroundin rectangle and the local histogram.
   int valuuu = (int) (orig.at<uchar>(row, col));
   int sub = pow(startRow - row, 2) / 6;
   if (valuuu - sub >= derivThreshold) {
     binResult.at<uchar>(row, col) = 255;
     
     // update the surrounding rectangle
-    minR = min(minR, row);
-    maxR = max(maxR, row);
-    minC = min(minC, col);
-    maxC = max(maxC, col);
-    localHistogram[ (int)round(source.at<Vec3b>(row, col)[0] / HIST_STEP)][(int) round(source.at<Vec3b>(row, col)[1] / HIST_STEP)][ (int) round(source.at<Vec3b>(row, col)[2] / HIST_STEP)] ++;
+    int rowEntire, colEntire;
+    cvtSC2EC(row, col, rowEntire, colEntire);
+    
+    minR = min(minR, rowEntire);
+    maxR = max(maxR, rowEntire);
+    minC = min(minC, colEntire);
+    maxC = max(maxC, colEntire);
+    localHistogram
+        [(int) round(source.at<Vec3b>(row, col)[0] / HIST_STEP)]
+        [(int) round(source.at<Vec3b>(row, col)[1] / HIST_STEP)]
+        [(int) round(source.at<Vec3b>(row, col)[2] / HIST_STEP)] ++;
   } else {
     binResult.at<uchar>(row, col) = 0;
     return; 
   }  
   
+  
+  //
+  //
+  // Recursive call.
   for(int i = -1; i <= 1; i++) {
     for(int j = -1; j <= 1; j++) {
     
@@ -711,9 +720,9 @@ void Preprocessing::derivative(Mat src, Mat& dst) {
 void Preprocessing::cvtEC2SC(int eR, int eC, int& sR, int& sC) {
 
   double str = this->smallSegmentStretch;
-  int rd = this-smallSegmentRowDisplace;
-  sR  = (r - rd) * str;
-  sC = c * str;
+  int rd = this->smallSegmentRowDisplace;
+  sR  = (eR - rd) * str;
+  sC = eC * str;
 }
     
 /**
@@ -723,7 +732,7 @@ void Preprocessing::cvtEC2SC(int eR, int eC, int& sR, int& sC) {
 void Preprocessing::cvtSC2EC(int sR, int sC, int& eR, int& eC) {
 
   double str = this->smallSegmentStretch;
-  int rd = this-smallSegmentRowDisplace;
+  int rd = this->smallSegmentRowDisplace;
   eR  = sR / str + rd;
   eC = sC / str;
 }

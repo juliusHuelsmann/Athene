@@ -145,17 +145,13 @@
 
 
       void extractSegment();
+        bool startPercecution( int row, int col);
+          void derivative(Mat src, Mat& dst);
+          void percecution(Mat& binResult, int row, int col, Mat orig, int startRow, int startCol);
 
 
-
-
-
-      void derivative(Mat src, Mat& dst);
-      void percecution(Mat& binResult, int row, int col, Mat orig, int startRow, int startCol);
-      bool startPercecution( int row, int col, Mat orig, int& shiftRow, double& stretch);
-
-      void percecuteTwo(Mat&, Mat, Vec3b, int, int, int&, int&, int&, int&, bool, bool, bool);
-      void extractLetters(Mat, Mat, vector<Mat>&, int, double, Vec3b, bool, bool, bool);
+        void percecuteTwo(Mat&, Mat, Vec3b, int, int, int&, int&, int&, int&, bool, bool, bool);
+        void extractLetters(Mat, Mat, vector<Mat>&, int, double, Vec3b, bool, bool, bool);
     
     
     
