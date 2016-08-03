@@ -150,7 +150,7 @@ void startPercecution(Mat& binResult, int row, int col, Mat orig, int& shiftRow,
 
   //preprocessing. 
   binResult = 2 * Mat::ones(minus + plus, orig.cols, CV_8UC1);
-  Mat pathOrig = source(Range(row - minus, row + plus), Range::all());
+  Mat pathOrig = source(Range(row - minus, row + plus), Range::all()).clone();
   // resize
   double ratio = 
                   14.0
@@ -227,20 +227,30 @@ void extractSegment(Mat& src_gray, int y, int x) {
   
   
   
+  
+  
+  
+  std:: cout << binResult.rows << ",  " << binResult.cols << "\n";
+  
+  
+  
   // for displaying
   bool display = true;
   if (display) {
+  
+    Mat source2;
+	  threshold(source, source2, 130, 255, 0);;
     
-    Mat result = source.clone();
+    Mat result = Mat(source.rows, source.cols, CV_8UC3);
     
     //bge
     for(int i = 0; i < result.rows; i++) {
       for(int j = 0; j < result.cols; j++) {
         int iimg = (int) ((i - shiftRow) * stretchFactor);
         int jimg = (int) ((j) * stretchFactor);
-        int b = source.at<Vec3b>(i, j)[0];
-        int g = source.at<Vec3b>(i, j)[1];
-        int r = source.at<Vec3b>(i, j)[2];
+        int b = source2.at<uchar>(i, j);
+        int g = source2.at<uchar>(i, j);
+        int r = source2.at<uchar>(i, j);
         
         if (iimg >= 0 && jimg >= 0 && iimg < binResult.rows && jimg < binResult.cols) {
           
@@ -271,13 +281,13 @@ void segmentHandler(int event, int x, int y, int flags, void* userdata)
 {
 
 
-  Mat src_gray;
-  cvtColor(source, src_gray, CV_BGR2GRAY );
+  //cvtColor(source, src_gray, CV_BGR2GRAY );
   
      if  ( event == EVENT_LBUTTONDOWN )
      {
           // Segment extrahieren
-          extractSegment(src_gray, x, y);
+          Mat d = source.clone();
+          extractSegment(d, x, y);
           
           // alle shapes aktivieren, die punktweise da drin vorkommen
           
@@ -300,9 +310,14 @@ void segmentHandler(int event, int x, int y, int flags, void* userdata)
 
 int main(int argc, char** argv) {
 
-  //source = imread("screenshot.png");
-  source = imread("test2.png");
-//  source = imread("../generateTrainingData/scripts/0.png");
+  source = imread("screenshot.png", 0);
+  source = imread("test2.png", 0);
+  if (!source.data) {
+    std:: cout << "err loading img\n";
+    exit(0);
+  }
+	// preprocessing and find contour
+  // source = imread("../generateTrainingData/scripts/0.png");
   
   std:: string win0 = "orig";
   namedWindow( win0 );
