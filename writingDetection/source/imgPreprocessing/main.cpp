@@ -4,8 +4,7 @@
 Mat gray, clr;
 void segmentHandler(int event, int x, int y, int flags, void* userdata) {
   if  ( event == EVENT_LBUTTONDOWN ) {
-    Preprocessing p = Preprocessing(clr);
-    p.extractSegment(x, y);
+    Preprocessing p = Preprocessing(clr, y, x);
   } else if  ( event == EVENT_RBUTTONDOWN ) {
   
   } else if  ( event == EVENT_MBUTTONDOWN ) { 

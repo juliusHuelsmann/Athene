@@ -17,18 +17,87 @@
   using namespace cv;
   using namespace std;
   
-  static int histStep = 16; 
-  static int histSize = 256 / histStep;
+  #define HIST_STEP 16 
+  #define HIST_SIZE 256 / HIST_STEP
   
   class Preprocessing {
 
     private:
       
-      int thresh1;
-      Mat source;
-
+      
+      
+      
       //
-      // Surrounding rectangle. Might be used in the future.
+      // The entire images processed and not processed.
+      //
+      
+      /**
+       * The source matrix.
+       * Type = CV_8UC3
+       */
+      Mat source;
+      
+      /**
+       * The cranerryThresholdedImage.
+       * Type = CV_8UC1
+       */
+      Mat cran;
+      
+      
+      
+      
+      
+      
+      //
+      // Small Segment values 
+      //
+      
+      /**
+       * The binary image of the small segment.
+       * Type = CV_8UC1.
+       * 255 = activated
+       * 2 = not yet visited
+       * 0 = not in scope
+       */
+      Mat smallSegmentBin;
+      
+      /**
+       * Derivative image of the small segment taken from source
+       */
+      Mat smallSegmentDer;
+      
+      /**
+       * The displacement of the smallSegment in row
+       * (smallSegment*.at(r, c) ^ source.at(r + smallSegmentRowDisplace, c);
+       * in case the image was not stretched.
+       * 
+       * Formular including smallSegmentStretch
+       * Abbrev:  smallSegmentStretch =: str, smallSegmentRowDisplace =: rd
+       *          smallSegment =: sS, source =: src
+       *
+       *    sS (r , c) ^ src(r / str + rd, c / str);
+       *    src(r , c) ^ sS ((r - rd) * str, c * str);
+       * 
+       */
+      int smallSegmentRowDisplace;
+      
+      /**
+       * The stretch factor in both row and column.
+       */
+      double smallSegmentStretch;
+      
+      
+      
+      
+      
+      //
+      //
+      //
+      
+      
+      /**
+       * Surrounding rectangle.
+       */
       int minR;
       int maxR;
       int minC;
@@ -42,19 +111,78 @@
       // Approach 1:  Generate Histogram (with low resolution) and take the local
       //                                  two biggest maxima.
       //              The histogram is generated on-the-fly in percecution method.
-      int localHistogram [16][16][16]; // TODO
+      int localHistogram [HIST_SIZE][HIST_SIZE][HIST_SIZE]; 
+      
+      
+      
+      
+      
+      
+      
+      //
+      // Other values that are used for computation
+      //
+      
+      /**
+       * The threshold for the first part of the segmentation with the 
+       * Canerry image.
+       */      
+      int derivThreshold;
+      
+      
+      /**
+       * The location of the user's click.
+       */
+      int row, col;
+      
+
+
+
+      //////////////////////////////////////////////////////////////////////////
+      //////////////////////////////////////////////////////////////////////////
+      ///////////////////////////FUNCTIONS//////////////////////////////////////
+      //////////////////////////////////////////////////////////////////////////
+
+
+      void extractSegment();
+
+
+
+
 
       void derivative(Mat src, Mat& dst);
       void percecution(Mat& binResult, int row, int col, Mat orig, int startRow, int startCol);
-      bool startPercecution(Mat& binResult, int row, int col, Mat orig, int& shiftRow, double& stretch);
+      bool startPercecution( int row, int col, Mat orig, int& shiftRow, double& stretch);
 
       void percecuteTwo(Mat&, Mat, Vec3b, int, int, int&, int&, int&, int&, bool, bool, bool);
       void extractLetters(Mat, Mat, vector<Mat>&, int, double, Vec3b, bool, bool, bool);
     
+    
+    
+    
+    
+    
+    
+    
+        
+      //
+      // Utilities  
+      
+      /**
+       * Convert coordinates of entire image to coordinates of small-segment img.
+       * @see smallSegmentRowDisplace
+       */
+      void cvtEC2SC(int eR, int eC, int& sR, int& sC);
+      
+      /**
+       * Convert coordinates of small-segment-image to coordinates of entire img.
+       * @see smallSegmentRowDisplace
+       */
+      void cvtSC2EC(int sR, int sC, int& eR, int& eC);
+      
     public:
-      Preprocessing(Mat xsource);
+      Preprocessing(Mat xsource, int row, int col);
       ~Preprocessing();
-      void extractSegment(int y, int x);
   };
 
   
