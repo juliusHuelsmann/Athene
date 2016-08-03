@@ -343,7 +343,6 @@ void Preprocessing::extractSegment(int y, int x) {
     std:: cout << "nothing found\n";
     return;
   }
-  exit(1);
   
   
   
@@ -391,6 +390,7 @@ void Preprocessing::extractSegment(int y, int x) {
         }
       }
     }
+  exit(1);
     
     //TODO: may yield a seg fault
     //
