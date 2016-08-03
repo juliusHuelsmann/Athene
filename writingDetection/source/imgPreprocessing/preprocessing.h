@@ -14,6 +14,21 @@
   #include <stdlib.h>
   #include <stdio.h>
 
-void preprocessing(Mat ximg);
+  class Preprocessing {
+
+    private:
+      
+      int thresh1;
+      Mat source;
+      void edges(Mat src, Mat& dst);
+      void percecution(Mat& binResult, int row, int col, Mat orig, int startRow, int startCol);
+void startPercecution(Mat& binResult, int row, int col, Mat orig, int& shiftRow, double& stretch);
+    
+    public:
+      Preprocessing(Mat xsource);
+      ~Preprocessing();
+      void extractSegment(Mat& src_gray, int y, int x);
+  };
+
   
 #endif
