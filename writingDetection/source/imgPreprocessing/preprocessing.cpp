@@ -28,17 +28,126 @@ Erweiterungen:
 
 */
 
+
+
 Preprocessing::Preprocessing(Mat xsource) {
   thresh1 = 70;
   source = xsource;
+  
+  
+    // Taks:        Get background - Foureground relationship.
+    //
+    // For all approaches it is firstly necessary only to regard the sgement
+    // that has been activated by the preprocessing.
+    //
+    // Approach 1:  Generate Histogram (with low resolution) and take the local
+    //                                  two biggest maxima.
+    //              The histogram is generated on-the-fly in percecution method.
+    //
+    //Accodring to 255 = 5 * 51 = 5 * 3 * 17, the possible values are
+    // 3, 5, 15, 17, 51, 85. We could suggest that 15, 16 work best
+    for (int bind = 0; bind < histSize; bind++) {
+      for (int gind = 0; gind < histSize; gind++) {
+        for (int rind = 0; rind < histSize; rind++) {
+          localHistogram[bind][gind][rind] = 0;
+        }
+      }
+    }
 }
 
 Preprocessing::~Preprocessing() {
 }
 
+void Preprocessing::extractLetters(Mat binResult, Mat xsource, vector<Mat>& shapes, int shiftRow, double stretchFactor, Vec3b thresh, bool geq1, bool geq2, bool geq3) {
+
+  shapes = vector<Mat>();
+  vector<Mat> locs = vector<Mat>();
+  
+  for(int i = 0; i < xsource.rows; i++) {
+    for(int j = 0; j < xsource.cols; j++) {
+      int iimg = (int) ((i - shiftRow) * stretchFactor);
+      int jimg = (int) ((j) * stretchFactor);
+      int b = xsource.at<Vec3b>(i, j)[0];
+      int g = xsource.at<Vec3b>(i, j)[1];
+      int r = xsource.at<Vec3b>(i, j)[2];
+        
+      if (iimg >= 0 && jimg >= 0 && iimg < binResult.rows && jimg < binResult.cols) {
+          
+        int rV = (int)binResult.at<uchar>(iimg , jimg);
+        if ((geq1 == (b >= thresh[0]))
+            && (geq2 == (g >= thresh[1]))
+            && (geq3 == (r >= thresh[2]))
+            && rV == 255)  {//TODO: <= oder >=?
+          
+          // this is selected area
+          Mat result = Mat::zeros(maxR - minR, maxC - minC, CV_8UC1);
+          Mat locate = Mat(4, 1, CV_32FC1);
+          int minCShape = maxC - minC;
+          int maxCShape = 0;
+          int minRShape = maxR - minR;
+          int maxRShape = 0;
+          percecuteTwo(result, xsource, thresh, i, j, minCShape, maxCShape, minRShape, maxRShape, geq1, geq2, geq3);
+          locate.at<float>(0, 0) = minRShape;
+          locate.at<float>(1, 0) = maxRShape;
+          locate.at<float>(2, 0) = minCShape;
+          locate.at<float>(3, 0) = maxCShape;
+          
+          //TODO: Check if the order is correct.
+          result = result(Range(minCShape, maxCShape), Range(minRShape, maxRShape));
+          shapes.push_back(result);
+          locs.push_back(result);
+          
+          
+        }
+      }
+    }
+  }
+  
+  for (int s = 0; s < shapes.size(); s++) {
+    showImage(shapes[s], "hker", 0);
+  }
+  
+  //TODO: Split letters or merge them according to their size.
+  
+  
+  
+  
+  
+}
+
+void Preprocessing::percecuteTwo(Mat& result, Mat xsource, Vec3b thresh, int r, int c, int& minCShape, int& maxCShape, int& minRShape, int& maxRShape, bool geq1, bool geq2, bool geq3) {
+  
+  
+  int curr = r - minR;
+  int curc = c - minC;
+  minRShape = min(curr, minRShape);
+  maxRShape = max(curr, maxRShape);
+  minCShape = min(curc, minCShape);
+  maxCShape = max(curc, maxCShape);
+  result.at<uchar>(curr, curc) = 255;
+  
+  for(int i = -1; i <= 1; i++) {
+    for(int j = 1; j <= 1; j++) {
+      if (i == j == 0) {
+        continue;
+      } else if (i + r >= 0 && j + c >= 0 && i + r < xsource.rows && j + c < xsource.cols) {
+        // check if in range
+        
+        int b = xsource.at<Vec3b>(i + r, j + c)[0];
+        int g = xsource.at<Vec3b>(i + r, j + c)[1];
+        int r = xsource.at<Vec3b>(i + r, j + c)[2];
+        if ((geq1 == (b >= thresh[0]))
+            && (geq2 == (g >= thresh[1]))
+            && (geq3 == (r >= thresh[2]))) {
+            percecuteTwo(result, xsource, thresh, r + i, c + j, minCShape, maxCShape, minRShape, maxRShape, geq1, geq2, geq3);
+        }
+      }
+    }
+  }
+}
 
 
-void Preprocessing::edges(Mat src, Mat& dst) {
+void Preprocessing::derivative(Mat src, Mat& dst) {
 
   int edgeThresh = 1;
   int lowThreshold = 100;
@@ -58,15 +167,29 @@ void Preprocessing::edges(Mat src, Mat& dst) {
 void Preprocessing::percecution(Mat& binResult, int row, int col, Mat orig, int startRow, int startCol) {
 
 
+  std:: cout << "start perc\n";
+  minR = binResult.rows;
+  maxR = 0;
+  minC = binResult.cols;
+  maxC = 0;
+  exit(1);
+
   // 8UC1
   int valuuu = (int) (orig.at<uchar>(row, col));
   int sub = pow(startRow - row, 2) / 6;
   if (valuuu - sub >= thresh1) {
     binResult.at<uchar>(row, col) = 255;
+    
+    // update the surrounding rectangle
+    minR = min(minR, row);
+    maxR = max(maxR, row);
+    minC = min(minC, col);
+    maxC = max(maxC, col);
+    localHistogram[ source.at<Vec3b>(row, col)[0]][ source.at<Vec3b>(row, col)[1]][ source.at<Vec3b>(row, col)[2]] ++;
   } else {
     binResult.at<uchar>(row, col) = 0;
     return; 
-  }
+  }  
   
   for(int i = -1; i <= 1; i++) {
     for(int j = -1; j <= 1; j++) {
@@ -103,7 +226,7 @@ void Preprocessing::percecution(Mat& binResult, int row, int col, Mat orig, int 
 //                  being able to link the extracted patch to the image.
 //                  (is written by this function)
 // @param stretch   The stretch factor. Dto.
-void Preprocessing::startPercecution(Mat& binResult, int row, int col, Mat orig, int& shiftRow, double& stretch) {
+bool Preprocessing::startPercecution(Mat& binResult, int row, int col, Mat orig, int& shiftRow, double& stretch) {
 
 
   //
@@ -149,7 +272,6 @@ void Preprocessing::startPercecution(Mat& binResult, int row, int col, Mat orig,
   
   
   // stripe row - minus, row + plus
-  
     
   
 
@@ -166,21 +288,12 @@ void Preprocessing::startPercecution(Mat& binResult, int row, int col, Mat orig,
   Size dsize = Size( (int)(pathOrig.cols * ratio), (int) (pathOrig.rows * ratio)); // is swapped...
   resize(pathOrig, pathOrig, dsize);
   
-  edges(pathOrig, pathOrig);
+  derivative(pathOrig, pathOrig);
 
 
 
   row = (int) round(1.0 * minus * ratio);
   col = (int) round(1.0 * col * ratio);
-  bool doubledebug = false;
-  if (doubledebug) {
-  for (int q = -5; q <= 5; q++) {
-    pathOrig.at<uchar>(row+ q, col * ratio + q) = 255;
-  }
-  std:: string win0 = "jk ";
-  namedWindow( win0 );
-  imshow( win0, pathOrig);
-  }
 
   int maxadd = 20;
   for(int i = 1; i <= maxadd; i++) {
@@ -199,27 +312,41 @@ void Preprocessing::startPercecution(Mat& binResult, int row, int col, Mat orig,
               && newCol < binResult.cols ) {
             int valuuu = (int) (pathOrig.at<uchar>(newRow, newCol));
             if (valuuu >= thresh1) {
-            
+          
               // found starting point.
               percecution(binResult, newRow, newCol, pathOrig, newRow, newCol);
-              return;
+              return true;
             }
           }
         }
       } 
     }
   }
+  return false;
 }
 
 
-void Preprocessing::extractSegment(Mat& src_gray, int y, int x) {
+void Preprocessing::extractSegment(int y, int x) {
 
-  edges(src_gray, src_gray);
-  
+
+
+  //
+  // Extract edges
   Mat binResult;
-  int shiftRow;
-  double stretchFactor;
-  startPercecution(binResult, x, y, src_gray, shiftRow, stretchFactor);
+  derivative(source, binResult);
+  
+  //
+  // Start the percecution
+  int shiftRow = 0;
+  double stretchFactor = 0;
+  bool found = startPercecution(binResult, x, y, binResult, shiftRow, stretchFactor);
+  
+  if (!found) {
+    std:: cout << "nothing found\n";
+    return;
+  }
+  
+  
   
   // dislike long structures. therefore: erode with more col (2nd entry)
   int morec = 1;
@@ -232,10 +359,83 @@ void Preprocessing::extractSegment(Mat& src_gray, int y, int x) {
   
   
   
+    // Taks:        Get background - Foureground relationship.
+    //
+    // For all approaches it is firstly necessary only to regard the sgement
+    // that has been activated by the preprocessing.
+    //
+    // Approach 1:  Generate Histogram (with low resolution) and take the local
+    //                                  two biggest maxima.
+    //              The histogram is generated on-the-fly in percecution method.
+    //
+    // Approach 2)  DOES NOT WORK
+    //              a) Do threshold. Once with 200 and with 55.
+    //              b) Sum of white, sum of black. Min_i = min(white_i, black_i)
+    //                 for both thresholds
+    //              c) Take argmin_i min_i
+    //                 if i == approach 200 ->  fg black
+    //                 else                     fg white
+    
+    
+    //
+    // Taks for now: find two biggest local maxima 
+    int biggest = 0;
+    Vec3b biggestIndex;
+    for (int bindx = 0; bindx < histSize; bindx++) {
+      for (int gind = 0; gind < histSize; gind++) {
+        for (int rind = 0; rind < histSize; rind++) {
+
+          if (localHistogram[bindx][gind][rind] > biggest) {
+            biggestIndex = Vec3b(bindx, gind, rind);
+            biggest = localHistogram[bindx][gind][rind];
+          }          
+        }
+      }
+    }
+    
+    //TODO: may yield a seg fault
+    //
+    // find 2nd local maximum
+    // rm the values that are not allowed as maxima
+    localHistogram[biggestIndex[0]][biggestIndex[1]][biggestIndex[2]] *= -1;
+    localHistogram[biggestIndex[0]][biggestIndex[1] + 1][biggestIndex[2]] *= -1;
+    localHistogram[biggestIndex[0]][biggestIndex[1] - 1][biggestIndex[2]] *= -1;
+    localHistogram[biggestIndex[0]][biggestIndex[1]][biggestIndex[2] + 1] *= -1;
+    localHistogram[biggestIndex[0]][biggestIndex[1]][biggestIndex[2] - 1] *= -1;
+    localHistogram[biggestIndex[0] + 1][biggestIndex[1]][biggestIndex[2]] *= -1;
+    localHistogram[biggestIndex[0] - 1][biggestIndex[1]][biggestIndex[2]] *= -1;
+    int ScndBb = 0;
+    Vec3b scndBbIndex;
+    for (int bindx = 0; bindx < histSize; bindx++) {
+      for (int gind = 0; gind < histSize; gind++) {
+        for (int rind = 0; rind < histSize; rind++) {
+
+          if (localHistogram[bindx][gind][rind] > ScndBb) {
+            scndBbIndex = Vec3b(bindx, gind, rind);
+            ScndBb = localHistogram[bindx][gind][rind];
+          }          
+        }
+      }
+    }
+    
+    // find a value in between as threshold
+    // val >= clrThresh -> background
+    Vec3f clrThresh = Vec3f(
+          biggestIndex[0] / 2.0 + scndBbIndex[0] / 2.0,
+          biggestIndex[1] / 2.0 + scndBbIndex[1] / 2.0,
+          biggestIndex[2] / 2.0 + scndBbIndex[2] / 2.0);
+    bool geq1 = biggestIndex[0] <= scndBbIndex[0];  // == true in case text grater eq thresh
+    bool geq2 = biggestIndex[1] <= scndBbIndex[1]; 
+    bool geq3 = biggestIndex[2] <= scndBbIndex[2]; 
+    
+    vector<Mat> shapes;
+    extractLetters(binResult, source, shapes, shiftRow, stretchFactor, clrThresh, geq1, geq2, geq3);
+    
+    Mat source2;
+	  //threshold(source, source2, 220, 255, 0);;
+	  threshold(source, source2, 100, 255, 0);;
   
   
-  
-  std:: cout << binResult.rows << ",  " << binResult.cols << "\n";
   
   
   
@@ -243,8 +443,6 @@ void Preprocessing::extractSegment(Mat& src_gray, int y, int x) {
   bool display = true;
   if (display) {
   
-    Mat source2;
-	  threshold(source, source2, 130, 255, 0);;
     
     Mat result = Mat(source.rows, source.cols, CV_8UC3);
     
@@ -272,7 +470,7 @@ void Preprocessing::extractSegment(Mat& src_gray, int y, int x) {
     }
     
        // window
-  std::string win1 = "orig";
+    std::string win1 = "orig";
     namedWindow( win1, CV_WINDOW_AUTOSIZE );
     imshow( win1, result);
     waitKey(0);

@@ -4,9 +4,8 @@
 Mat matemat;
 void segmentHandler(int event, int x, int y, int flags, void* userdata) {
   if  ( event == EVENT_LBUTTONDOWN ) {
-    Mat d = matemat.clone();
     Preprocessing p = Preprocessing(matemat);
-    p.extractSegment(d, x, y);
+    p.extractSegment(x, y);
   } else if  ( event == EVENT_RBUTTONDOWN ) {
   
   } else if  ( event == EVENT_MBUTTONDOWN ) { 
