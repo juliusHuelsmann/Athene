@@ -80,13 +80,15 @@ void Preprocessing::extractLetters(Mat binResult, Mat xsource, vector<Mat>& shap
             && rV == 255)  {//TODO: <= oder >=?
           
           // this is selected area
-          Mat result = Mat::zeros(maxR - minR, maxC - minC, CV_8UC1);
+          Mat result = Mat::zeros(3 * (maxR - minR), 3*(maxC - minC), CV_8UC1);
           Mat locate = Mat(4, 1, CV_32FC1);
           int minCShape = maxC - minC;
           int maxCShape = 0;
           int minRShape = maxR - minR;
           int maxRShape = 0;
+    std:: cout << i << "," << j << "\t" << xsource.rows << " " << xsource.cols << " 5\n";
           percecuteTwo(result, xsource, thresh, i, j, minCShape, maxCShape, minRShape, maxRShape, geq1, geq2, geq3);
+    std:: cout << i << "," << j << "\t" << xsource.rows << " " << xsource.cols << " 6\n";
           locate.at<float>(0, 0) = minRShape;
           locate.at<float>(1, 0) = maxRShape;
           locate.at<float>(2, 0) = minCShape;
@@ -115,16 +117,37 @@ void Preprocessing::extractLetters(Mat binResult, Mat xsource, vector<Mat>& shap
   
 }
 
+// result is a lot bigger 3 * preferredsize.
 void Preprocessing::percecuteTwo(Mat& result, Mat xsource, Vec3b thresh, int r, int c, int& minCShape, int& maxCShape, int& minRShape, int& maxRShape, bool geq1, bool geq2, bool geq3) {
+
+  int aR = maxR - minR;
+  int oR = minR - aR;
+  int curr = r - oR;
   
+  int aC = 0; // for now
+  int oC = minC - aC;
+  int curc = c - oC;
+
+  std:: cout << minC << " "  << maxC << "\n";
+  std:: cout << c<<"\n";
+  exit(0);
+  std:: cout << "hier0\n";
+  //curr = r - (maxR - minR);
+  //curc = c - (maxC - minC);
+  std:: cout << curr << "," << curc<<" 1asdfasdf\n";
+  std:: cout << result.rows << "," << result.cols<<" 2asdfasdf\n";
+
   
-  int curr = r - minR;
-  int curc = c - minC;
+  if (curr < 0 || curc < 0 || curr >= result.rows || curc >= result.cols) {
+    return;
+  }
   minRShape = min(curr, minRShape);
   maxRShape = max(curr, maxRShape);
   minCShape = min(curc, minCShape);
   maxCShape = max(curc, maxCShape);
+  std:: cout << "hier1\n";
   result.at<uchar>(curr, curc) = 255;
+  std:: cout << "hier2\n";
   
   for(int i = -1; i <= 1; i++) {
     for(int j = 1; j <= 1; j++) {
@@ -136,6 +159,7 @@ void Preprocessing::percecuteTwo(Mat& result, Mat xsource, Vec3b thresh, int r, 
         int b = xsource.at<Vec3b>(i + r, j + c)[0];
         int g = xsource.at<Vec3b>(i + r, j + c)[1];
         int r = xsource.at<Vec3b>(i + r, j + c)[2];
+        
         if ((geq1 == (b >= thresh[0]))
             && (geq2 == (g >= thresh[1]))
             && (geq3 == (r >= thresh[2]))) {
@@ -313,6 +337,12 @@ bool Preprocessing::startPercecution(Mat& binResult, int row, int col, Mat orig,
               maxC = 0;
 
               percecution(binResult, newRow, newCol, pathOrig, newRow, newCol);
+              
+              minR -= shiftRow;
+              minR /= stretch;
+              maxR /= stretch;
+              minC /= stretch;
+              maxC /= stretch;
               return true;
             }
           }
@@ -354,7 +384,10 @@ void Preprocessing::extractSegment(int y, int x) {
   int addidil = 8;
 	dilate(binResult, binResult, getStructuringElement(MORPH_RECT, Size(k + addidil, k + addidil)));
 	erode(binResult, binResult, getStructuringElement(MORPH_RECT, Size(k, k)));
-  
+  minR -= addidil;
+  maxR -= addidil;
+  minC -= addidil;
+  maxC -= addidil;
   
   
     // Taks:        Get background - Foureground relationship.
@@ -390,19 +423,31 @@ void Preprocessing::extractSegment(int y, int x) {
         }
       }
     }
-  exit(1);
     
     //TODO: may yield a seg fault
     //
     // find 2nd local maximum
     // rm the values that are not allowed as maxima
-    localHistogram[biggestIndex[0]][biggestIndex[1]][biggestIndex[2]] *= -1;
-    localHistogram[biggestIndex[0]][biggestIndex[1] + 1][biggestIndex[2]] *= -1;
-    localHistogram[biggestIndex[0]][biggestIndex[1] - 1][biggestIndex[2]] *= -1;
-    localHistogram[biggestIndex[0]][biggestIndex[1]][biggestIndex[2] + 1] *= -1;
-    localHistogram[biggestIndex[0]][biggestIndex[1]][biggestIndex[2] - 1] *= -1;
-    localHistogram[biggestIndex[0] + 1][biggestIndex[1]][biggestIndex[2]] *= -1;
-    localHistogram[biggestIndex[0] - 1][biggestIndex[1]][biggestIndex[2]] *= -1;
+    for (int a = -1; a <= 1; a+= 2) {
+      int v1u = biggestIndex[0];
+      int v2u = biggestIndex[1];
+      int v3u = biggestIndex[2];
+      
+      int v1 = biggestIndex[0] + a;
+      int v2 = biggestIndex[1] + a;
+      int v3 = biggestIndex[2] + a;
+      
+      if (v1 >= 0 && v1 < histSize) {
+        localHistogram[v1][v2u][v3u] *= -1;
+      } 
+      
+      if (v2 >= 0 && v2 < histSize) {
+        localHistogram[v1u][v2][v3u] *= -1;
+      }
+      if (v3 >= 0 && v3 < histSize) {
+        localHistogram[v1u][v2u][v3] *= -1;
+      }
+    }
     int ScndBb = 0;
     Vec3b scndBbIndex;
     for (int bindx = 0; bindx < histSize; bindx++) {
@@ -426,6 +471,7 @@ void Preprocessing::extractSegment(int y, int x) {
     bool geq1 = biggestIndex[0] <= scndBbIndex[0];  // == true in case text grater eq thresh
     bool geq2 = biggestIndex[1] <= scndBbIndex[1]; 
     bool geq3 = biggestIndex[2] <= scndBbIndex[2]; 
+    
     
     vector<Mat> shapes;
     extractLetters(binResult, source, shapes, shiftRow, stretchFactor, clrThresh, geq1, geq2, geq3);
