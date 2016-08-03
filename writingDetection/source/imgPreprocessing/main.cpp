@@ -1,10 +1,10 @@
 #include "preprocessing.h"
 
 
-Mat matemat;
+Mat gray, clr;
 void segmentHandler(int event, int x, int y, int flags, void* userdata) {
   if  ( event == EVENT_LBUTTONDOWN ) {
-    Preprocessing p = Preprocessing(matemat);
+    Preprocessing p = Preprocessing(clr);
     p.extractSegment(x, y);
   } else if  ( event == EVENT_RBUTTONDOWN ) {
   
@@ -17,17 +17,17 @@ void segmentHandler(int event, int x, int y, int flags, void* userdata) {
 
 int main(int argc, char** argv) {
 
-  matemat = imread("screenshot.png", 0);
-  matemat = imread("test2.png", 0);
-  if (!matemat.data) {
+  gray = imread("screenshot.png", 0);
+  gray = imread("test2.png", 0);
+  clr = imread("test2.png");
+  if (!gray.data) {
     std:: cout << "err loading img\n";
     exit(0);
   }
-  
-  std:: string win0 = "orig";
+  std:: string win0 = "oerig";
   namedWindow( win0 );
   setMouseCallback(win0, segmentHandler, NULL);
-  imshow( win0, matemat);
+  imshow( win0, gray);
   waitKey(0);
   
   std:: cout << "Ende \n";

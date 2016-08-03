@@ -167,13 +167,6 @@ void Preprocessing::derivative(Mat src, Mat& dst) {
 void Preprocessing::percecution(Mat& binResult, int row, int col, Mat orig, int startRow, int startCol) {
 
 
-  std:: cout << "start perc\n";
-  minR = binResult.rows;
-  maxR = 0;
-  minC = binResult.cols;
-  maxC = 0;
-  exit(1);
-
   // 8UC1
   int valuuu = (int) (orig.at<uchar>(row, col));
   int sub = pow(startRow - row, 2) / 6;
@@ -185,7 +178,7 @@ void Preprocessing::percecution(Mat& binResult, int row, int col, Mat orig, int 
     maxR = max(maxR, row);
     minC = min(minC, col);
     maxC = max(maxC, col);
-    localHistogram[ source.at<Vec3b>(row, col)[0]][ source.at<Vec3b>(row, col)[1]][ source.at<Vec3b>(row, col)[2]] ++;
+    localHistogram[ (int)round(source.at<Vec3b>(row, col)[0] / histStep)][(int) round(source.at<Vec3b>(row, col)[1] / histStep)][ (int) round(source.at<Vec3b>(row, col)[2] / histStep)] ++;
   } else {
     binResult.at<uchar>(row, col) = 0;
     return; 
@@ -314,6 +307,11 @@ bool Preprocessing::startPercecution(Mat& binResult, int row, int col, Mat orig,
             if (valuuu >= thresh1) {
           
               // found starting point.
+              minR = binResult.rows;
+              maxR = 0;
+              minC = binResult.cols;
+              maxC = 0;
+
               percecution(binResult, newRow, newCol, pathOrig, newRow, newCol);
               return true;
             }
@@ -345,6 +343,7 @@ void Preprocessing::extractSegment(int y, int x) {
     std:: cout << "nothing found\n";
     return;
   }
+  exit(1);
   
   
   

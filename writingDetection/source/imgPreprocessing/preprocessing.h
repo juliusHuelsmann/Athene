@@ -17,8 +17,8 @@
   using namespace cv;
   using namespace std;
   
-  static int histStep = 17; 
-  static int histSize = 255 / histStep;
+  static int histStep = 16; 
+  static int histSize = 256 / histStep;
   
   class Preprocessing {
 
@@ -42,7 +42,7 @@
       // Approach 1:  Generate Histogram (with low resolution) and take the local
       //                                  two biggest maxima.
       //              The histogram is generated on-the-fly in percecution method.
-      int localHistogram [1][2][3];
+      int localHistogram [16][16][16]; // TODO
 
       void derivative(Mat src, Mat& dst);
       void percecution(Mat& binResult, int row, int col, Mat orig, int startRow, int startCol);
