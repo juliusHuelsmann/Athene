@@ -176,6 +176,12 @@
        */
       void cvtSC2EC(int sR, int sC, int& eR, int& eC);
       
+      
+      /**
+ * (r,c) -> (cvtEc2SC(r,c)) + (h_r, w_c) 
+       */
+      void cvtEC2Letter(int eR, int eC, int& lR, int& lC);
+            
     public:
       Preprocessing(Mat xsource, int row, int col);
       ~Preprocessing();
