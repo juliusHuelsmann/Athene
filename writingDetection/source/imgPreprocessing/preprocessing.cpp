@@ -194,6 +194,7 @@ void Preprocessing::extractSegment() {
   //
   // find 2nd local maximum
   // rm the values that are not allowed as maxima
+  /*
   for (int a = -1; a <= 1; a+= 2) {
     int v1u = biggestIndex[0];
     int v2u = biggestIndex[1];
@@ -213,7 +214,7 @@ void Preprocessing::extractSegment() {
     if (v3 >= 0 && v3 < HIST_SIZE) {
       this->localHistogram[v1u][v2u][v3] *= -1;
     }
-  }
+  }*/
   int ScndBb = 0;
   Vec3b scndBbIndex;
   for (int bindx = 0; bindx < HIST_SIZE; bindx++) {
@@ -465,6 +466,24 @@ bool Preprocessing::startPercecution(int row, int col) {
               maxC = 0;
 
               percecution(this->smallSegmentBin, newRow, newCol, this->smallSegmentDer, newRow, newCol);
+              
+              
+              /*
+               * Task 4:     Fill the histogram with background values
+               */
+              for(int sr = 0; sr <= smallSegmentBin.rows; sr++) {
+                for(int sc = 0; sc <= smallSegmentBin.cols; sc++) {
+                  // if background
+                  int eR, eC;
+                  cvtSC2EC(sr, sc, eR, eC);
+                  if (smallSegmentBin.rows == 0) {
+                    localHistogram
+                        [(int) round(1.0 * source.at<Vec3b>(eR, eC)[0] / HIST_STEP)]
+                        [(int) round(1.0 * source.at<Vec3b>(eR, eC)[1] / HIST_STEP)]
+                        [(int) round(1.0 * source.at<Vec3b>(eR, eC)[2] / HIST_STEP)] --;
+                  }
+                }
+              }
               return true;
             }
           }
@@ -472,6 +491,10 @@ bool Preprocessing::startPercecution(int row, int col) {
       } 
     }
   }
+  
+  
+  
+  
   return false;
 }
 
