@@ -155,8 +155,8 @@
           void percecution(Mat& binResult, int row, int col, Mat orig, int startRow, int startCol);
 
 
-        void percecuteTwo(Mat&, Mat, Vec3b, int, int, int&, int&, int&, int&, bool, bool, bool);
-        void extractLetters(Mat, Mat, vector<Mat>&, int, double, Vec3b, bool, bool, bool);
+        void percecuteTwo(Mat&, Mat, int, int, int&, int&, int&, int&);
+        void extractLetters(Mat, Mat, vector<Mat>&);
      
      
 

@@ -145,12 +145,12 @@ void Preprocessing::extractSegment() {
   
   //TODO: Das hier wieder einkommentieren und ueberpruefen ob bei min max richtig gehandelt wird.
   int morec = 1;
-	erode(this->cran, this->cran, getStructuringElement(MORPH_RECT, Size(1, morec)));
-	dilate(this->cran, this->cran, getStructuringElement(MORPH_RECT, Size(1, morec)));
-  int k = 10;
-  int addidil = 10;
-	dilate(this->cran, this->cran, getStructuringElement(MORPH_RECT, Size(k + addidil, k + addidil)));
-	erode(this->cran, this->cran, getStructuringElement(MORPH_RECT, Size(k, k)));
+	erode(this->smallSegmentBin, this->smallSegmentBin, getStructuringElement(MORPH_RECT, Size(1, morec)));
+	dilate(this->smallSegmentBin, this->smallSegmentBin, getStructuringElement(MORPH_RECT, Size(1, morec)));
+  int k = 8;
+  int addidil = 8;
+	dilate(this->smallSegmentBin, this->smallSegmentBin, getStructuringElement(MORPH_RECT, Size(k + addidil, k + addidil)));
+	erode(this->smallSegmentBin, this->smallSegmentBin, getStructuringElement(MORPH_RECT, Size(k, k)));
   minR -= addidil;
   maxR += addidil;
   minC -= addidil;
@@ -192,11 +192,54 @@ void Preprocessing::extractSegment() {
         (biggestIndex[0] * weight + smallestIndex[0] * (1 - weight)) * HIST_STEP,
         (biggestIndex[1] * weight + smallestIndex[1] * (1 - weight)) * HIST_STEP,
         (biggestIndex[2] * weight + smallestIndex[2] * (1 - weight)) * HIST_STEP);
+  
+ 
+ 
+  //
+  //
+  // Compute the current propability histogram.
+  Mat meanFG = (Mat_<float>(3, 1) << biggestIndex[0], biggestIndex[1], biggestIndex[2]);
+  Mat meanBG = (Mat_<float>(3, 1) << smallestIndex[0], smallestIndex[1], smallestIndex[2]);
+  Mat invCovFG = Mat::zeros(3, 3, CV_32FC1);
+  Mat invCovBG = Mat::eye(3, 3, CV_32FC1);
+  float eigenvalues = 0.822;
+  invCovFG.at<float>(0, 0) = 1.0 / eigenvalues; 
+  invCovFG.at<float>(1, 1) = 1.0 / eigenvalues; 
+  invCovFG.at<float>(2, 2) = 1.0 / eigenvalues;
+  float sqrtdetFG = sqrt(eigenvalues * eigenvalues * eigenvalues);
+  float sqrtdetBG = 1.0;
+  
+  for (int bindx = 0; bindx < HIST_SIZE; bindx++) {
+    for (int gind = 0; gind < HIST_SIZE; gind++) {
+      for (int rind = 0; rind < HIST_SIZE; rind++) {
+      
+      
+        Mat x = (Mat_<float>(3, 1) << bindx, gind, rind);
+        Mat xt;
+        transpose(x-meanFG, xt);
+        Mat d = x - meanFG;
+        Mat expM = (-1.0/2.0 *  xt * invCovFG * d);
+        float vFG = 1.0/sqrtdetFG * exp(expM.at<float>(0,0));
         
         
-  bool geq1 = biggestIndex[0] >= smallestIndex[0];  // == true in case text grater eq thresh
-  bool geq2 = biggestIndex[1] >= smallestIndex[1]; 
-  bool geq3 = biggestIndex[2] >= smallestIndex[2]; 
+        Mat x2t;
+        transpose(x-meanBG, x2t);
+        Mat d2 = x - meanBG;
+        Mat expM2 = (-1.0/2.0 *  x2t * invCovBG * d2);
+        float vBG = 1.0/sqrtdetBG * exp(expM2.at<float>(0,0));
+        probHistogram[bindx][gind][rind] = vFG / (vFG + vBG);
+        std:: cout << ((int) round(probHistogram[bindx][gind][rind] * 10))/10.0 << "\t";
+      }
+        std:: cout << "\n";
+    }
+        std:: cout << "\n";
+        std:: cout << "\n";
+  }
+  
+  
+  
+  
+        
   // debug
   
   /*
@@ -244,7 +287,7 @@ void Preprocessing::extractSegment() {
   fgbg.at<Vec3b>(1, fgbg.cols - 2) = smallestIndex * HIST_STEP;
   fgbg.at<Vec3b>(0, fgbg.cols - 1) = (smallestIndex + one) * HIST_STEP;
   fgbg.at<Vec3b>(1, fgbg.cols - 1) = (smallestIndex + one) * HIST_STEP;
-  showImage(fgbg, "fg links, bg rechts (ranges); Center:thresh", 0);
+ // showImage(fgbg, "fg links, bg rechts (ranges); Center:thresh", 0);
    
    
   
@@ -253,7 +296,7 @@ void Preprocessing::extractSegment() {
 	//threshold(source, source2, 220, 255, 0);;
   cvtColor(source2, source2, CV_BGR2GRAY);
 	threshold(source2, source2, 100, 255, 0);
-	showImage(source2, "orig", 0);
+//	showImage(source2, "orig", 0);
   
   
   
@@ -290,7 +333,7 @@ void Preprocessing::extractSegment() {
     }
     
        // window
-    std::string win1 = "orig";
+    std::string win1 = "oerig";
     namedWindow( win1, CV_WINDOW_AUTOSIZE );
     imshow( win1, result);
     waitKey(0);
@@ -323,15 +366,15 @@ void Preprocessing::extractSegment() {
   
   
   vector<Mat> shapes;
-  extractLetters(this->smallSegmentBin, source, shapes, (this->smallSegmentRowDisplace), this->smallSegmentStretch, clrThresh, geq1, geq2, geq3);
-  showImage(this->source, "source detected", 0);
+ // extractLetters(this->smallSegmentBin, source, shapes);
+  //showImage(this->source, "source detected", 0);
  
  
   //TODO: bis hier hin korrigiert.
-  showImage(this->source, "source", 0);
-  showImage(this->cran, "cran", 0);
-  showImage(this->smallSegmentBin, "smallSegmentBin", 0);
-  showImage(this->smallSegmentDer, "smallSegmentDer", 0);
+ // showImage(this->source, "source", 0);
+ // showImage(this->cran, "cran", 0);
+ // showImage(this->smallSegmentBin, "smallSegmentBin", 0);
+ // showImage(this->smallSegmentDer, "smallSegmentDer", 0);
   
 }
 
@@ -604,13 +647,14 @@ void Preprocessing::percecution(Mat& binResult, int row, int col, Mat orig,
 
 
 
-void Preprocessing::extractLetters(Mat binResult, Mat xsource, vector<Mat>& shapes, int shiftRow, double stretchFactor, Vec3b thresh, bool geq1, bool geq2, bool geq3) {
+void Preprocessing::extractLetters(Mat binResult, Mat xsource, vector<Mat>& shapes) {
 
   shapes = vector<Mat>();
   vector<Mat> locs = vector<Mat>();   
   
   Mat tempImageRange = xsource(Range(this->smallSegmentRowDisplace, this->smallSegmentRowDisplace + 50), Range::all());
   showImage(tempImageRange, "segment", 0);
+  
   for(int i = this->smallSegmentRowDisplace; i < xsource.rows; i++) {
     for(int j = 0; j < xsource.cols; j++) {
 
@@ -620,14 +664,16 @@ void Preprocessing::extractLetters(Mat binResult, Mat xsource, vector<Mat>& shap
       int b = xsource.at<Vec3b>(i, j)[0];
       int g = xsource.at<Vec3b>(i, j)[1];
       int r = xsource.at<Vec3b>(i, j)[2];
+      
+      
+      int vvB = (int) floor(1.0 * b / HIST_STEP);
+      int vvG = (int) floor(1.0 * g / HIST_STEP);
+      int vvR = (int) floor(1.0 * r / HIST_STEP);
         
       if (iimg >= 0 && jimg >= 0 && iimg < binResult.rows && jimg < binResult.cols) {
           
         int rV = (int) binResult.at<uchar>(iimg , jimg);
-        if ((  (geq1 == (b >= thresh[0]))
-            || (geq2 == (g >= thresh[1]))
-            || (geq3 == (r >= thresh[2])))
-            && rV == 255)  {//TODO: <= oder >=?
+        if (probHistogram[vvB][vvG][vvR] >= 0.5 && rV == 255)  {
           
           // this is selected area
           Mat result = 155 *  Mat::ones(3 * (maxR - minR), 3*(maxC - minC), CV_8UC1);
@@ -637,8 +683,9 @@ void Preprocessing::extractLetters(Mat binResult, Mat xsource, vector<Mat>& shap
           int minRShape = result.rows; //(maxR - minR);
           int maxRShape = 0;
 
-          percecuteTwo(result, xsource, thresh, i, j, minCShape, 
-              maxCShape, minRShape, maxRShape, geq1, geq2, geq3);
+
+          percecuteTwo(result, xsource, i, j, minCShape, 
+              maxCShape, minRShape, maxRShape);
 
           locate.at<float>(0, 0) = minRShape;
           locate.at<float>(1, 0) = maxRShape;
@@ -664,7 +711,7 @@ void Preprocessing::extractLetters(Mat binResult, Mat xsource, vector<Mat>& shap
   }
   
   for (int s = 0; s < shapes.size(); s++) {
-//    showBin(shapes[s], "the extracted shape :)", 0);
+    showBin(shapes[s], "the extracted shape :)", 0);
   }
      //     showImage(source, "changedsource", 0);
   
@@ -691,11 +738,9 @@ void Preprocessing::extractLetters(Mat binResult, Mat xsource, vector<Mat>& shap
 //
 // @param m***Shape   The describing rectangle of the percecuteTwo.
 //
-void Preprocessing::percecuteTwo(Mat& result, Mat xsource, Vec3b thresh, 
+void Preprocessing::percecuteTwo(Mat& result, Mat xsource, 
     int r, int c, int& minCShape, int& maxCShape, 
-    int& minRShape, int& maxRShape, bool geq1, bool geq2, bool geq3) {
-
-
+    int& minRShape, int& maxRShape) {
 
   int curr = 0;
   int curc = 0;
@@ -704,6 +749,7 @@ void Preprocessing::percecuteTwo(Mat& result, Mat xsource, Vec3b thresh,
   if (curr < 0 || curc < 0 || curr >= result.rows || curc >= result.cols) {
     return;
   }
+  
   minRShape = min(curr, minRShape);
   maxRShape = max(curr, maxRShape);
   minCShape = min(curc, minCShape);
@@ -711,39 +757,31 @@ void Preprocessing::percecuteTwo(Mat& result, Mat xsource, Vec3b thresh,
   
   result.at<uchar>(curr, curc) = 255;
   
-  
   //
   // Recursive call is triggered in case the pixel is cathegorized as 
   // foreground.
   for(int i = -1; i <= 1; i++) {
-    for(int j = 1; j <= 1; j++) {
-      if (i == j && j == 0) {
+    for(int j = -1; j <= 1; j++) {
+      if (i == 0 && j == 0) {
         continue;
       } else {
         if (i + r >= 0 && j + c >= 0 
-          && i + r < xsource.rows && j + c < xsource.cols) {
+            && i + r < xsource.rows && j + c < xsource.cols) {
         
           int newrL, newcL;
-          cvtEC2Letter(i+r, i+c, newrL, newcL);
+          cvtEC2Letter(i + r, j + c, newrL, newcL);
         
           // check if in range
-          int cb = xsource.at<Vec3b>(i + r, j + c)[0];
-          int cg = xsource.at<Vec3b>(i + r, j + c)[1];
-          int cr = xsource.at<Vec3b>(i + r, j + c)[2];
+          int vvB = (int) floor(1.0 *  xsource.at<Vec3b>(i + r, j + c)[0] / HIST_STEP);
+          int vvG = (int) floor(1.0 *  xsource.at<Vec3b>(i + r, j + c)[1] / HIST_STEP);
+          int vvR = (int) floor(1.0 *  xsource.at<Vec3b>(i + r, j + c)[2] / HIST_STEP);
+         
+          source.at<Vec3b>(i + r, j + c) = Vec3b(255, 0, 0);
           
-          source.at<Vec3b>(i+r, i+c) = Vec3b(255, 0, 0);
-          
-
-          
-  //        std:: cout << "VALID?" << xsource.at<Vec3b>(r, c) << "<" << thresh << "? \n";
-  //        std:: cout << "\t" << xsource.at<Vec3b>(i+r, j+c) << "<" << thresh << "? \n";
-          
-          if (result.at<uchar>(newrL, newcL) != 255) {
-            if (geq1 == (cb >= thresh[0]) 
-                || geq2 == (cg >= thresh[1]) 
-                || geq3 == (cr >= thresh[2])) {
-              percecuteTwo(result, xsource, thresh, r + i, c + j, 
-                  minCShape, maxCShape, minRShape, maxRShape, geq1, geq2, geq3);
+          if (newrL >= 0 && newcL >= 0 && newrL < result.rows && newcL < result.cols && result.at<uchar>(newrL, newcL) == 155) {
+            if (probHistogram[vvB][vvG][vvR] >= 0.5) {
+              percecuteTwo(result, xsource, r + i, c + j, 
+                  minCShape, maxCShape, minRShape, maxRShape);
             } else {
               
               result.at<uchar>(newrL, newcL) = 0;
