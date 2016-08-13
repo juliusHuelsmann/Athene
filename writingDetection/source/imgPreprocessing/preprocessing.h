@@ -114,6 +114,11 @@
       int localHistogram [HIST_SIZE][HIST_SIZE][HIST_SIZE]; 
       
       
+      // histogram which indicates the propability of a RGB combi to be 
+      // foreground
+      float probHistogram [HIST_SIZE][HIST_SIZE][HIST_SIZE]; 
+      
+      
       
       
       

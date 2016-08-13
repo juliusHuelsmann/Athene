@@ -14,6 +14,9 @@ void segmentHandler(int event, int x, int y, int flags, void* userdata) {
   }
 }
 
+
+
+
 int main(int argc, char** argv) {
 
   gray = imread("screenshot.png", 0);

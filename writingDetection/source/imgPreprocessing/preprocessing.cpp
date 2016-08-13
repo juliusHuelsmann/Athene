@@ -142,19 +142,19 @@ void Preprocessing::extractSegment() {
   
   
   // dislike long structures. therefore: erode with more col (2nd entry)
-  /*
+  
   //TODO: Das hier wieder einkommentieren und ueberpruefen ob bei min max richtig gehandelt wird.
   int morec = 1;
 	erode(this->cran, this->cran, getStructuringElement(MORPH_RECT, Size(1, morec)));
 	dilate(this->cran, this->cran, getStructuringElement(MORPH_RECT, Size(1, morec)));
-  int k = 5;
-  int addidil = 8;
+  int k = 10;
+  int addidil = 10;
 	dilate(this->cran, this->cran, getStructuringElement(MORPH_RECT, Size(k + addidil, k + addidil)));
 	erode(this->cran, this->cran, getStructuringElement(MORPH_RECT, Size(k, k)));
   minR -= addidil;
-  maxR -= addidil;
+  maxR += addidil;
   minC -= addidil;
-  maxC -= addidil;*/
+  maxC += addidil;
   
   
   // Taks:        Get background - Foureground relationship.
@@ -187,11 +187,13 @@ void Preprocessing::extractSegment() {
     
   // find a value in between as threshold
   // val >= clrThresh -> background
-  float weight = 1.0 / 9.0;
+  float weight = 1.0 / 2.0;
   Vec3f clrThresh = Vec3f(
         (biggestIndex[0] * weight + smallestIndex[0] * (1 - weight)) * HIST_STEP,
         (biggestIndex[1] * weight + smallestIndex[1] * (1 - weight)) * HIST_STEP,
         (biggestIndex[2] * weight + smallestIndex[2] * (1 - weight)) * HIST_STEP);
+        
+        
   bool geq1 = biggestIndex[0] >= smallestIndex[0];  // == true in case text grater eq thresh
   bool geq2 = biggestIndex[1] >= smallestIndex[1]; 
   bool geq3 = biggestIndex[2] >= smallestIndex[2]; 
@@ -245,24 +247,13 @@ void Preprocessing::extractSegment() {
   showImage(fgbg, "fg links, bg rechts (ranges); Center:thresh", 0);
    
    
-  vector<Mat> shapes;
-  extractLetters(this->smallSegmentBin, source, shapes, (this->smallSegmentRowDisplace), this->smallSegmentStretch, clrThresh, geq1, geq2, geq3);
-
- 
- 
-  //TODO: bis hier hin korrigiert.
-  showImage(this->source, "source", 0);
-  showImage(this->cran, "cran", 0);
-  showImage(this->smallSegmentBin, "smallSegmentBin", 0);
-  showImage(this->smallSegmentDer, "smallSegmentDer", 0);
-  exit(1);
- 
- 
-    
-    Mat source2;
-	  //threshold(source, source2, 220, 255, 0);;
-	  threshold(source, source2, 100, 255, 0);;
   
+    
+  Mat source2 = source.clone();
+	//threshold(source, source2, 220, 255, 0);;
+  cvtColor(source2, source2, CV_BGR2GRAY);
+	threshold(source2, source2, 100, 255, 0);
+	showImage(source2, "orig", 0);
   
   
   
@@ -277,8 +268,9 @@ void Preprocessing::extractSegment() {
     //bge
     for(int i = 0; i < result.rows; i++) {
       for(int j = 0; j < result.cols; j++) {
-        int iimg = (int) ((i - (this->smallSegmentRowDisplace)) * (this->smallSegmentStretch));
-        int jimg = (int) ((j) * this->smallSegmentStretch);
+        int iimg = 0;
+        int jimg = 0;
+        cvtEC2SC(i, j, iimg, jimg);
         int b = source2.at<uchar>(i, j);
         int g = source2.at<uchar>(i, j);
         int r = source2.at<uchar>(i, j);
@@ -303,6 +295,44 @@ void Preprocessing::extractSegment() {
     imshow( win1, result);
     waitKey(0);
   }
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  vector<Mat> shapes;
+  extractLetters(this->smallSegmentBin, source, shapes, (this->smallSegmentRowDisplace), this->smallSegmentStretch, clrThresh, geq1, geq2, geq3);
+  showImage(this->source, "source detected", 0);
+ 
+ 
+  //TODO: bis hier hin korrigiert.
+  showImage(this->source, "source", 0);
+  showImage(this->cran, "cran", 0);
+  showImage(this->smallSegmentBin, "smallSegmentBin", 0);
+  showImage(this->smallSegmentDer, "smallSegmentDer", 0);
+  
 }
 
 
@@ -470,10 +500,6 @@ bool Preprocessing::startPercecution(int row, int col) {
       } 
     }
   }
-  
-  
-  
-  
   return false;
 }
 
@@ -498,7 +524,8 @@ bool Preprocessing::startPercecution(int row, int col) {
 
 // CV_8UC1 == binResult.type()
 // CV_8UC1 = orig.type()
-void Preprocessing::percecution(Mat& binResult, int row, int col, Mat orig, int startRow, int startCol) {
+void Preprocessing::percecution(Mat& binResult, int row, int col, Mat orig,
+    int startRow, int startCol) {
 
 
   //
@@ -586,9 +613,6 @@ void Preprocessing::extractLetters(Mat binResult, Mat xsource, vector<Mat>& shap
   showImage(tempImageRange, "segment", 0);
   for(int i = this->smallSegmentRowDisplace; i < xsource.rows; i++) {
     for(int j = 0; j < xsource.cols; j++) {
-    
-    
-      //std:: cout << 100 * i / xsource.rows << "% " << 100 * j / xsource.cols<< "%\n";  
 
       int iimg; //(int) ((i - shiftRow) * stretchFactor);
       int jimg; //(int) (j * stretchFactor);
@@ -599,10 +623,10 @@ void Preprocessing::extractLetters(Mat binResult, Mat xsource, vector<Mat>& shap
         
       if (iimg >= 0 && jimg >= 0 && iimg < binResult.rows && jimg < binResult.cols) {
           
-        int rV = (int)binResult.at<uchar>(iimg , jimg);
-        if ((geq1 == (b >= thresh[0]))
-            && (geq2 == (g >= thresh[1]))
-            && (geq3 == (r >= thresh[2]))
+        int rV = (int) binResult.at<uchar>(iimg , jimg);
+        if ((  (geq1 == (b >= thresh[0]))
+            || (geq2 == (g >= thresh[1]))
+            || (geq3 == (r >= thresh[2])))
             && rV == 255)  {//TODO: <= oder >=?
           
           // this is selected area
@@ -640,9 +664,9 @@ void Preprocessing::extractLetters(Mat binResult, Mat xsource, vector<Mat>& shap
   }
   
   for (int s = 0; s < shapes.size(); s++) {
-    showBin(shapes[s], "the extracted shape :)", 0);
+//    showBin(shapes[s], "the extracted shape :)", 0);
   }
-          showImage(source, "changedsource", 0);
+     //     showImage(source, "changedsource", 0);
   
   //TODO: Split letters or merge them according to their size.
 }
@@ -707,15 +731,17 @@ void Preprocessing::percecuteTwo(Mat& result, Mat xsource, Vec3b thresh,
           int cg = xsource.at<Vec3b>(i + r, j + c)[1];
           int cr = xsource.at<Vec3b>(i + r, j + c)[2];
           
-          source.at<Vec3b>(i+r, i+c) = Vec3b(0, 0, 255);
+          source.at<Vec3b>(i+r, i+c) = Vec3b(255, 0, 0);
+          
 
           
   //        std:: cout << "VALID?" << xsource.at<Vec3b>(r, c) << "<" << thresh << "? \n";
   //        std:: cout << "\t" << xsource.at<Vec3b>(i+r, j+c) << "<" << thresh << "? \n";
           
           if (result.at<uchar>(newrL, newcL) != 255) {
-            if (geq1 == (cb >= thresh[0]) && geq2 == (cg >= thresh[1]) && geq3 == (cr >= thresh[2])) {
-              std:: cout << "!!!!!!!percecution forewareded 2\n";
+            if (geq1 == (cb >= thresh[0]) 
+                || geq2 == (cg >= thresh[1]) 
+                || geq3 == (cr >= thresh[2])) {
               percecuteTwo(result, xsource, thresh, r + i, c + j, 
                   minCShape, maxCShape, minRShape, maxRShape, geq1, geq2, geq3);
             } else {
