@@ -217,9 +217,9 @@ void Preprocessing::extractSegment() {
   }*/
   int ScndBb = 0;
   Vec3b scndBbIndex;
-  for (int bindx = 0; bindx < HIST_SIZE; bindx++) {
-    for (int gind = 0; gind < HIST_SIZE; gind++) {
-      for (int rind = 0; rind < HIST_SIZE; rind++) {
+  for (int bindx = 0; bindx <= HIST_SIZE; bindx++) {
+    for (int gind = 0; gind <= HIST_SIZE; gind++) {
+      for (int rind = 0; rind <= HIST_SIZE; rind++) {
         if (this->localHistogram[bindx][gind][rind] > ScndBb) {
           scndBbIndex = Vec3b(bindx, gind, rind);
           ScndBb = this->localHistogram[bindx][gind][rind];
@@ -467,21 +467,22 @@ bool Preprocessing::startPercecution(int row, int col) {
 
               percecution(this->smallSegmentBin, newRow, newCol, this->smallSegmentDer, newRow, newCol);
               
+              std:: cout << "finished perc\n" << smallSegmentBin.rows << "\n";
               
               /*
                * Task 4:     Fill the histogram with background values
                */
-              for(int sr = 0; sr <= smallSegmentBin.rows; sr++) {
-                for(int sc = 0; sc <= smallSegmentBin.cols; sc++) {
+              for(int sr = 0; sr < smallSegmentBin.rows; sr++) {
+                for(int sc = 0; sc < smallSegmentBin.cols; sc++) {
                   // if background
                   int eR, eC;
                   cvtSC2EC(sr, sc, eR, eC);
-                  if (smallSegmentBin.rows == 0) {
+                  if (smallSegmentBin.at<uchar>(sr, sc) == 0) {
                     int vB = (int) round(1.0 * source.at<Vec3b>(eR, eC)[0] / HIST_STEP);
                     int vG = (int) round(1.0 * source.at<Vec3b>(eR, eC)[1] / HIST_STEP);
                     int vR = (int) round(1.0 * source.at<Vec3b>(eR, eC)[2] / HIST_STEP);
                   std:: cout << "bgr" << vB << ", " << vG << ", " << vR << "\n";
-                    localHistogram
+                  localHistogram
                         [vB]
                         [vG]
                         [vR] --;
