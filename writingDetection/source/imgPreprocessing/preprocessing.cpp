@@ -138,7 +138,7 @@ void Preprocessing::extractSegment() {
     std:: cout << "nothing found\n";
     return;
   }
-  
+  //printHistogram();
   
   
   // dislike long structures. therefore: erode with more col (2nd entry)
@@ -162,18 +162,6 @@ void Preprocessing::extractSegment() {
   // For all approaches it is firstly necessary only to regard the sgement
   // that has been activated by the preprocessing.
   //
-  // Approach 1:  Generate Histogram (with low resolution) and take the local
-  //                                  two biggest maxima.
-  //              The histogram is generated on-the-fly in percecution method.
-  //
-  // Approach 2)  DOES NOT WORK
-  //              a) Do threshold. Once with 200 and with 55.
-  //              b) Sum of white, sum of black. Min_i = min(white_i, black_i)
-  //                 for both thresholds
-  //              c) Take argmin_i min_i
-  //                 if i == approach 200 ->  fg black
-  //                 else                     fg white
-    
   //
   // Taks for now: find global maximum and global minimum 
   int biggest = 0;
@@ -199,15 +187,14 @@ void Preprocessing::extractSegment() {
     
   // find a value in between as threshold
   // val >= clrThresh -> background
+  float weight = 1.0 / 9.0;
   Vec3f clrThresh = Vec3f(
-        (biggestIndex[0] / 2.0 + smallestIndex[0] / 2.0) * HIST_STEP,
-        (biggestIndex[1] / 2.0 + smallestIndex[1] / 2.0) * HIST_STEP,
-        (biggestIndex[2] / 2.0 + smallestIndex[2] / 2.0) * HIST_STEP);
+        (biggestIndex[0] * weight + smallestIndex[0] * (1 - weight)) * HIST_STEP,
+        (biggestIndex[1] * weight + smallestIndex[1] * (1 - weight)) * HIST_STEP,
+        (biggestIndex[2] * weight + smallestIndex[2] * (1 - weight)) * HIST_STEP);
   bool geq1 = biggestIndex[0] >= smallestIndex[0];  // == true in case text grater eq thresh
   bool geq2 = biggestIndex[1] >= smallestIndex[1]; 
   bool geq3 = biggestIndex[2] >= smallestIndex[2]; 
-  
-  
   // debug
   
   /*
@@ -256,6 +243,7 @@ void Preprocessing::extractSegment() {
   fgbg.at<Vec3b>(0, fgbg.cols - 1) = (smallestIndex + one) * HIST_STEP;
   fgbg.at<Vec3b>(1, fgbg.cols - 1) = (smallestIndex + one) * HIST_STEP;
   showImage(fgbg, "fg links, bg rechts (ranges); Center:thresh", 0);
+   
    
   vector<Mat> shapes;
   extractLetters(this->smallSegmentBin, source, shapes, (this->smallSegmentRowDisplace), this->smallSegmentStretch, clrThresh, geq1, geq2, geq3);
@@ -594,7 +582,9 @@ void Preprocessing::extractLetters(Mat binResult, Mat xsource, vector<Mat>& shap
   shapes = vector<Mat>();
   vector<Mat> locs = vector<Mat>();   
   
-  for(int i = 0; i < xsource.rows; i++) {
+  Mat tempImageRange = xsource(Range(this->smallSegmentRowDisplace, this->smallSegmentRowDisplace + 50), Range::all());
+  showImage(tempImageRange, "segment", 0);
+  for(int i = this->smallSegmentRowDisplace; i < xsource.rows; i++) {
     for(int j = 0; j < xsource.cols; j++) {
     
     
@@ -616,7 +606,7 @@ void Preprocessing::extractLetters(Mat binResult, Mat xsource, vector<Mat>& shap
             && rV == 255)  {//TODO: <= oder >=?
           
           // this is selected area
-          Mat result = Mat::zeros(3 * (maxR - minR), 3*(maxC - minC), CV_8UC1);
+          Mat result = 155 *  Mat::ones(3 * (maxR - minR), 3*(maxC - minC), CV_8UC1);
           Mat locate = Mat(4, 1, CV_32FC1);
           int minCShape = result.cols; //maxC - minC;
           int maxCShape = 0;
@@ -626,20 +616,19 @@ void Preprocessing::extractLetters(Mat binResult, Mat xsource, vector<Mat>& shap
           percecuteTwo(result, xsource, thresh, i, j, minCShape, 
               maxCShape, minRShape, maxRShape, geq1, geq2, geq3);
 
-          std:: cout << "exited\n";
           locate.at<float>(0, 0) = minRShape;
           locate.at<float>(1, 0) = maxRShape;
           locate.at<float>(2, 0) = minCShape;
           locate.at<float>(3, 0) = maxCShape;
-          std:: cout << "locate vals\n";
-          std:: cout << "(" << result.rows << "," << result.cols << "\n";
-          std:: cout << "(" << minRShape << "-" << maxRShape<< "," << minCShape  << "-" << maxCShape << "\n";
+          //std:: cout << "locate vals\n";
+          //std:: cout << "(" << result.rows << "," << result.cols << "\n";
+          //std:: cout << "(" << minRShape << "-" << maxRShape<< "," << minCShape  << "-" << maxCShape << "\n";
           
-          showImage(result, "resultLetter", 0);
+          //showImage(result, "resultLetter", 0);
           //TODO: Check if the order is correct.
           result = result(Range(minRShape, maxRShape + 1), Range(minCShape, maxCShape + 1));
-          std:: cout << "result rerange\t";
-          std:: cout << "(" << result.rows << "," << result.cols << "\n";
+          //std:: cout << "result rerange\t";
+          //std:: cout << "(" << result.rows << "," << result.cols << "\n";
           //showImage(result, "resultLetter", 0);
           shapes.push_back(result);
           locs.push_back(result);
@@ -651,8 +640,9 @@ void Preprocessing::extractLetters(Mat binResult, Mat xsource, vector<Mat>& shap
   }
   
   for (int s = 0; s < shapes.size(); s++) {
-    showImage(shapes[s], "hker", 0);
+    showBin(shapes[s], "the extracted shape :)", 0);
   }
+          showImage(source, "changedsource", 0);
   
   //TODO: Split letters or merge them according to their size.
 }
@@ -687,10 +677,6 @@ void Preprocessing::percecuteTwo(Mat& result, Mat xsource, Vec3b thresh,
   int curc = 0;
   cvtEC2Letter(r, c, curr, curc);
 
-  std:: cout << "\t1/3:       (" << this->maxR - this->minR << ",\t"  << this->maxC - this->minC << ")\n\n";
-  std:: cout << "\tentire:    (" << r << ",\t" << c << ")" << "\tat\t" << xsource.rows << "," << xsource.cols << "\n";
-  std:: cout << "\tconverted: (" << curr << ",\t" << curc << ")" << "\tat\t" << result.rows << "," << result.cols << "\n";
-
   if (curr < 0 || curc < 0 || curr >= result.rows || curc >= result.cols) {
     return;
   }
@@ -707,34 +693,40 @@ void Preprocessing::percecuteTwo(Mat& result, Mat xsource, Vec3b thresh,
   // foreground.
   for(int i = -1; i <= 1; i++) {
     for(int j = 1; j <= 1; j++) {
-      if (i == j == 0) {
+      if (i == j && j == 0) {
         continue;
-      } else if (i + r >= 0 && j + c >= 0 
+      } else {
+        if (i + r >= 0 && j + c >= 0 
           && i + r < xsource.rows && j + c < xsource.cols) {
         
-        // check if in range
-        int cb = xsource.at<Vec3b>(i + r, j + c)[0];
-        int cg = xsource.at<Vec3b>(i + r, j + c)[1];
-        int cr = xsource.at<Vec3b>(i + r, j + c)[2];
+          int newrL, newcL;
+          cvtEC2Letter(i+r, i+c, newrL, newcL);
         
-        
-        std:: cout << "percecution forewareded 0\n";
-        std:: cout << (geq1 == (cb >= thresh[0])) << "\n";
-        std:: cout << (geq2 == (cg >= thresh[1])) << "\n";
-        std:: cout << (geq3 == (cr >= thresh[2])) << "\n";
-        std:: cout << thresh << geq1 << geq2 << geq3<<"\n";
-        
-        if ((geq1 == (cb >= thresh[0]))
-            && (geq2 == (cg >= thresh[1]))
-            && (geq3 == (cr >= thresh[2]))) {
-            std:: cout << "percecution forewareded 2\n";
-            percecuteTwo(result, xsource, thresh, r + i, c + j, 
-                minCShape, maxCShape, minRShape, maxRShape, geq1, geq2, geq3);
+          // check if in range
+          int cb = xsource.at<Vec3b>(i + r, j + c)[0];
+          int cg = xsource.at<Vec3b>(i + r, j + c)[1];
+          int cr = xsource.at<Vec3b>(i + r, j + c)[2];
+          
+          source.at<Vec3b>(i+r, i+c) = Vec3b(0, 0, 255);
+
+          
+  //        std:: cout << "VALID?" << xsource.at<Vec3b>(r, c) << "<" << thresh << "? \n";
+  //        std:: cout << "\t" << xsource.at<Vec3b>(i+r, j+c) << "<" << thresh << "? \n";
+          
+          if (result.at<uchar>(newrL, newcL) != 255) {
+            if (geq1 == (cb >= thresh[0]) && geq2 == (cg >= thresh[1]) && geq3 == (cr >= thresh[2])) {
+              std:: cout << "!!!!!!!percecution forewareded 2\n";
+              percecuteTwo(result, xsource, thresh, r + i, c + j, 
+                  minCShape, maxCShape, minRShape, maxRShape, geq1, geq2, geq3);
+            } else {
+              
+              result.at<uchar>(newrL, newcL) = 0;
+            }
+          }
         }
       }
     }
   }
-        std:: cout << "xit\n";
 }
 
 
@@ -769,7 +761,89 @@ void Preprocessing::derivative(Mat src, Mat& dst) {
 
 
 
+void Preprocessing::printHistogram() {
 
+  int factor = 100;
+  int maxval = 20;
+  int spaceadditional = 200;
+  int gap = 5;
+  
+  Mat glob = Mat::zeros(HIST_SIZE * factor * 2 + spaceadditional, 2 * gap + HIST_SIZE * factor * 3 + spaceadditional, CV_8UC3);
+  
+  for (int i = 0; i < 3; i++) {
+    //put first text
+    
+    for (int as = 0; as < HIST_SIZE; as++) {
+    
+      putText(glob, toString(as), Point(0, spaceadditional / 2 + factor / 2 + as * factor), 0, 2, Vec3b(255, 255, 255));
+      putText(glob, toString(as), Point(i * gap + HIST_SIZE * factor * i +  as * factor, spaceadditional/2), 0, 2, Vec3b(255, 255, 255));
+    }
+  
+    Vec3b txtClr = Vec3b(200, 200, 200);
+    for (int r = 0; r < HIST_SIZE; r++) {
+      for (int c = 0; c < HIST_SIZE; c++) {
+        int anz = 0;
+        for (int s = 0; s < HIST_SIZE; s++) {
+          anz += localHistogram [r * (i == 0) + r * (i == 1) + s * (i == 2)]
+                                [c * (i == 0) + s * (i == 1) + r * (i == 2)]
+                                [s * (i == 0) + c * (i == 1) + c * (i == 2)];
+        }
+        
+        int cr, cg, cb;
+        cg = min(200, abs(anz) * 200 / maxval);
+        if (anz < 0) {
+          cr = cg;
+          cb = cg + 55;
+        } else if (anz > 0) {
+          cb = cg;
+          cr = cg + 55;
+        } else {
+          cg = 0;
+          cb = 0;
+          cr = 0;
+        }
+        txtClr = Vec3b(255 - cb, 255 - cg, 255 - cr);
+        Vec3b vec = Vec3b(cb, cg, cr);
+        for (int k = 0; k < factor; k++) {
+          for (int l = 0; l < factor; l++) {
+            
+            int row = k + r * factor;
+            int col = l + c * factor;
+            glob.at<Vec3b>(spaceadditional / 2 + k + r * factor, spaceadditional / 2  + i * gap + HIST_SIZE * factor * i +  l + c * factor) =  vec;       
+          }
+        }
+        std:: string pos = toString(abs(anz));
+        putText(glob, pos, Point(spaceadditional / 2  + i * gap + HIST_SIZE * factor * i +  c * factor, spaceadditional / 2 + factor / 2 + r * factor), 0, 2, txtClr);
+      }
+    }
+  
+ // if (i == 1) 
+   // exit(1);
+  
+    // bg, br, gr
+    std:: string one = "bg";
+    std:: string two = "br";
+    std:: string three = "gr";
+    
+    std:: string t;
+    switch(i) {
+    case 0:
+      t = one;
+      break;
+    case 1:
+      t = two;
+      break;
+    default:
+      t = three;
+      break;
+    }
+    putText(glob, t, Point(spaceadditional / 2 + HIST_SIZE * factor * (i + 1.0/2) + i * gap, spaceadditional / 2 + HIST_SIZE * factor + 30), 1, 10, Vec3b(255, 255, 255));
+  }
+    showImage(glob, "segment histogram", 0);
+
+
+}    
+ 
 
 
 

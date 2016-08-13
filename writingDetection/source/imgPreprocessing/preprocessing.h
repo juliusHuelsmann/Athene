@@ -152,8 +152,12 @@
 
         void percecuteTwo(Mat&, Mat, Vec3b, int, int, int&, int&, int&, int&, bool, bool, bool);
         void extractLetters(Mat, Mat, vector<Mat>&, int, double, Vec3b, bool, bool, bool);
-    
-    
+     
+     
+
+      //
+      // Testing
+      void printHistogram();    
     
     
     

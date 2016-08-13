@@ -19,7 +19,8 @@
   Mat rotateAndScale(Mat& image, double angle, double scale);
   void circShift(Mat& in, Mat& out, int dx, int dy);
   void showImage(Mat& img, string win, double dur);
-
+void showBin(Mat& img, string win, double dur);
+  std::string toString(int i);
 
 
 
