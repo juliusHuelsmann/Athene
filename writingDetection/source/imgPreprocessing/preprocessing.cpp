@@ -173,7 +173,7 @@ void Preprocessing::extractSegment() {
   //              c) Take argmin_i min_i
   //                 if i == approach 200 ->  fg black
   //                 else                     fg white
-    
+  std:: cout << "hier\n";
   showImage(this->smallSegmentBin, "binresult for fetching clr", 0);
     
   //
@@ -477,10 +477,14 @@ bool Preprocessing::startPercecution(int row, int col) {
                   int eR, eC;
                   cvtSC2EC(sr, sc, eR, eC);
                   if (smallSegmentBin.rows == 0) {
+                    int vB = (int) round(1.0 * source.at<Vec3b>(eR, eC)[0] / HIST_STEP);
+                    int vG = (int) round(1.0 * source.at<Vec3b>(eR, eC)[1] / HIST_STEP);
+                    int vR = (int) round(1.0 * source.at<Vec3b>(eR, eC)[2] / HIST_STEP);
+                  std:: cout << "bgr" << vB << ", " << vG << ", " << vR << "\n";
                     localHistogram
-                        [(int) round(1.0 * source.at<Vec3b>(eR, eC)[0] / HIST_STEP)]
-                        [(int) round(1.0 * source.at<Vec3b>(eR, eC)[1] / HIST_STEP)]
-                        [(int) round(1.0 * source.at<Vec3b>(eR, eC)[2] / HIST_STEP)] --;
+                        [vB]
+                        [vG]
+                        [vR] --;
                   }
                 }
               }
