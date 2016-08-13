@@ -173,74 +173,44 @@ void Preprocessing::extractSegment() {
   //              c) Take argmin_i min_i
   //                 if i == approach 200 ->  fg black
   //                 else                     fg white
-  std:: cout << "hier\n";
-  showImage(this->smallSegmentBin, "binresult for fetching clr", 0);
     
   //
-  // Taks for now: find two biggest local maxima 
+  // Taks for now: find global maximum and global minimum 
   int biggest = 0;
   Vec3b biggestIndex;
+  int smallest = 0;
+  Vec3b smallestIndex;
   for (int bindx = 0; bindx < HIST_SIZE; bindx++) {
     for (int gind = 0; gind < HIST_SIZE; gind++) {
       for (int rind = 0; rind < HIST_SIZE; rind++) {
         if (this->localHistogram[bindx][gind][rind] > biggest) {
           biggestIndex = Vec3b(bindx, gind, rind);
           biggest = this->localHistogram[bindx][gind][rind];
-        }          
+        }  
+        if (this->localHistogram[bindx][gind][rind] < smallest) {
+          smallestIndex = Vec3b(bindx, gind, rind);
+          smallest = this->localHistogram[bindx][gind][rind];
+        }         
       }
     }
   }
     
-  //
-  // find 2nd local maximum
-  // rm the values that are not allowed as maxima
-  /*
-  for (int a = -1; a <= 1; a+= 2) {
-    int v1u = biggestIndex[0];
-    int v2u = biggestIndex[1];
-    int v3u = biggestIndex[2];
-      
-    int v1 = biggestIndex[0] + a;
-    int v2 = biggestIndex[1] + a;
-    int v3 = biggestIndex[2] + a;
-      
-    if (v1 >= 0 && v1 < HIST_SIZE) {
-      this->localHistogram[v1][v2u][v3u] *= -1;
-    } 
-      
-    if (v2 >= 0 && v2 < HIST_SIZE) {
-      this->localHistogram[v1u][v2][v3u] *= -1;
-    }
-    if (v3 >= 0 && v3 < HIST_SIZE) {
-      this->localHistogram[v1u][v2u][v3] *= -1;
-    }
-  }*/
-  int ScndBb = 0;
   Vec3b scndBbIndex;
-  for (int bindx = 0; bindx <= HIST_SIZE; bindx++) {
-    for (int gind = 0; gind <= HIST_SIZE; gind++) {
-      for (int rind = 0; rind <= HIST_SIZE; rind++) {
-        if (this->localHistogram[bindx][gind][rind] > ScndBb) {
-          scndBbIndex = Vec3b(bindx, gind, rind);
-          ScndBb = this->localHistogram[bindx][gind][rind];
-        }          
-      }
-    }
-  }
     
   // find a value in between as threshold
   // val >= clrThresh -> background
   Vec3f clrThresh = Vec3f(
-        biggestIndex[0] / 2.0 + scndBbIndex[0] / 2.0,
-        biggestIndex[1] / 2.0 + scndBbIndex[1] / 2.0,
-        biggestIndex[2] / 2.0 + scndBbIndex[2] / 2.0);
-  bool geq1 = biggestIndex[0] <= scndBbIndex[0];  // == true in case text grater eq thresh
-  bool geq2 = biggestIndex[1] <= scndBbIndex[1]; 
-  bool geq3 = biggestIndex[2] <= scndBbIndex[2]; 
+        (biggestIndex[0] / 2.0 + smallestIndex[0] / 2.0) * HIST_STEP,
+        (biggestIndex[1] / 2.0 + smallestIndex[1] / 2.0) * HIST_STEP,
+        (biggestIndex[2] / 2.0 + smallestIndex[2] / 2.0) * HIST_STEP);
+  bool geq1 = biggestIndex[0] >= smallestIndex[0];  // == true in case text grater eq thresh
+  bool geq2 = biggestIndex[1] >= smallestIndex[1]; 
+  bool geq3 = biggestIndex[2] >= smallestIndex[2]; 
   
   
   // debug
   
+  /*
   std:: cout << "histogram" <<"\n";
   int sum = 0;
   for (int bindx = 0; bindx < HIST_SIZE; bindx++) {
@@ -261,13 +231,31 @@ void Preprocessing::extractSegment() {
   }
   std:: cout << "sum=" << sum << "\n";
   exit(1);
-  Mat fgbg = Mat(2, 2, CV_8UC3);
-  fgbg.at<Vec3b>(0, 0) = biggestIndex;
-  fgbg.at<Vec3b>(1, 0) = biggestIndex;
-  fgbg.at<Vec3b>(0, 1) = scndBbIndex;
-  fgbg.at<Vec3b>(1, 1) = scndBbIndex;
-  showImage(fgbg, "bg links, fg rechts", 0);
+  */
+  Vec3b one = Vec3b(1, 1, 1);
+  Vec3b border = Vec3b(0, 0, 255);
+  Mat fgbg = Mat(2, 7, CV_8UC3);
+  fgbg.at<Vec3b>(0, 0) = biggestIndex * HIST_STEP;
+  fgbg.at<Vec3b>(1, 0) = biggestIndex * HIST_STEP;
+  fgbg.at<Vec3b>(0, 1) = (biggestIndex + one) * HIST_STEP;
+  fgbg.at<Vec3b>(1, 1) = (biggestIndex + one) * HIST_STEP;
   
+  fgbg.at<Vec3b>(0, 2) = border;
+  fgbg.at<Vec3b>(1, 2) = border;
+  
+  fgbg.at<Vec3b>(0, 3) = clrThresh;
+  fgbg.at<Vec3b>(1, 3) = clrThresh;
+  
+  
+  fgbg.at<Vec3b>(0, fgbg.cols - 3) = border;
+  fgbg.at<Vec3b>(1, fgbg.cols - 3) = border;
+  
+  
+  fgbg.at<Vec3b>(0, fgbg.cols - 2) = smallestIndex * HIST_STEP;
+  fgbg.at<Vec3b>(1, fgbg.cols - 2) = smallestIndex * HIST_STEP;
+  fgbg.at<Vec3b>(0, fgbg.cols - 1) = (smallestIndex + one) * HIST_STEP;
+  fgbg.at<Vec3b>(1, fgbg.cols - 1) = (smallestIndex + one) * HIST_STEP;
+  showImage(fgbg, "fg links, bg rechts (ranges); Center:thresh", 0);
    
   vector<Mat> shapes;
   extractLetters(this->smallSegmentBin, source, shapes, (this->smallSegmentRowDisplace), this->smallSegmentStretch, clrThresh, geq1, geq2, geq3);
@@ -467,7 +455,6 @@ bool Preprocessing::startPercecution(int row, int col) {
 
               percecution(this->smallSegmentBin, newRow, newCol, this->smallSegmentDer, newRow, newCol);
               
-              std:: cout << "finished perc\n" << smallSegmentBin.rows << "\n";
               
               /*
                * Task 4:     Fill the histogram with background values
@@ -478,14 +465,13 @@ bool Preprocessing::startPercecution(int row, int col) {
                   int eR, eC;
                   cvtSC2EC(sr, sc, eR, eC);
                   if (smallSegmentBin.at<uchar>(sr, sc) == 0) {
-                    int vB = (int) round(1.0 * source.at<Vec3b>(eR, eC)[0] / HIST_STEP);
-                    int vG = (int) round(1.0 * source.at<Vec3b>(eR, eC)[1] / HIST_STEP);
-                    int vR = (int) round(1.0 * source.at<Vec3b>(eR, eC)[2] / HIST_STEP);
-                  std:: cout << "bgr" << vB << ", " << vG << ", " << vR << "\n";
+                    int vB = (int) floor(1.0 * source.at<Vec3b>(eR, eC)[0] / HIST_STEP);
+                    int vG = (int) floor(1.0 * source.at<Vec3b>(eR, eC)[1] / HIST_STEP);
+                    int vR = (int) floor(1.0 * source.at<Vec3b>(eR, eC)[2] / HIST_STEP);
                   localHistogram
-                        [vB]
-                        [vG]
-                        [vR] --;
+                        [min(vB, HIST_STEP)]
+                        [min(vG, HIST_STEP)]
+                        [min(vR, HIST_STEP)] --;
                   }
                 }
               }
@@ -545,9 +531,9 @@ void Preprocessing::percecution(Mat& binResult, int row, int col, Mat orig, int 
     minC = min(minC, colEntire);
     maxC = max(maxC, colEntire);
     localHistogram
-        [(int) round(1.0 * source.at<Vec3b>(row, col)[0] / HIST_STEP)]
-        [(int) round(1.0 * source.at<Vec3b>(row, col)[1] / HIST_STEP)]
-        [(int) round(1.0 * source.at<Vec3b>(row, col)[2] / HIST_STEP)] ++;
+        [(int) floor(1.0 * source.at<Vec3b>(row, col)[0] / HIST_STEP)]
+        [(int) floor(1.0 * source.at<Vec3b>(row, col)[1] / HIST_STEP)]
+        [(int) floor(1.0 * source.at<Vec3b>(row, col)[2] / HIST_STEP)] ++;
   } else {
     binResult.at<uchar>(row, col) = 0;
     return; 
