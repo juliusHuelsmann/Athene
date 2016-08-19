@@ -19,9 +19,10 @@ void segmentHandler(int event, int x, int y, int flags, void* userdata) {
 
 int main(int argc, char** argv) {
 
-  gray = imread("screenshot.png", 0);
-  gray = imread("test2.png", 0);
-  clr = imread("test2.png");
+  std:: string title = "screenshot.png";
+  //title = "test2.png";
+  gray = imread(title, 0);
+  clr = imread(title);
   if (!gray.data) {
     std:: cout << "err loading img\n";
     exit(0);

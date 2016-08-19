@@ -478,6 +478,7 @@ bool Preprocessing::startPercecution(int row, int col) {
   resize((this->smallSegmentDer), (this->smallSegmentDer), dsize);
   this->smallSegmentBin = 2 * Mat::ones(this->smallSegmentDer.rows, this->smallSegmentDer.cols, CV_8UC1);
   derivative((this->smallSegmentDer), (this->smallSegmentDer));
+  
 
 
 
