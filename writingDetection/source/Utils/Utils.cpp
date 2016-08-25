@@ -185,6 +185,19 @@ void showImage(Mat& img, string win, double dur){
     
 }
 
+
+//
+//
+// General utility
+void showBin(Mat& img, string win, double dur){
+  
+  
+  Mat imgClone;
+  cvtColor(img, imgClone, CV_GRAY2RGB);
+  showImage(imgClone, win, dur);
+    
+}
+
 //
 //
 // specialized utility
@@ -217,7 +230,12 @@ void circShift(Mat& in, Mat& out, int dx, int dy){
 	out = tmp;
 }
 
+std::string toString(int i) {
+  stringstream s;
+  s << i;
+  return s.str();
 
+}
 
 
 

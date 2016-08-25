@@ -1,0 +1,6 @@
+#!/bin/bash
+
+rm imgpre.out
+cmake .
+make 
+./imgpre.out
