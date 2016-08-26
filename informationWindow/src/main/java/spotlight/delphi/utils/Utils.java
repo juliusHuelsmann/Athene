@@ -1,4 +1,4 @@
-package informationWindow.informationWindow.utils;
+package spotlight.delphi.utils;
 
 import java.awt.Graphics2D;
 import java.awt.Image;
@@ -7,7 +7,7 @@ import java.io.IOException;
 
 import javax.imageio.ImageIO;
 
-import informationWindow.informationWindow.view.AnimationWindow;
+import spotlight.delphi.view.AnimationWindow;
 
 
 public class Utils {

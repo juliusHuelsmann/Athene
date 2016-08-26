@@ -1,4 +1,4 @@
-package informationWindow.informationWindow.utils;
+package spotlight.delphi.utils;
 
 
 /*

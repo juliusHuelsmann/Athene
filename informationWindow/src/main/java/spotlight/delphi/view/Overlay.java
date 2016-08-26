@@ -1,4 +1,4 @@
-package informationWindow.informationWindow.view;
+package spotlight.delphi.view;
 
 
 import java.awt.AWTException;
@@ -13,9 +13,10 @@ import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
 import java.awt.image.BufferedImage;
+
 import javax.swing.JWindow;
 
-import informationWindow.informationWindow.utils.ImageTupel;
+import spotlight.delphi.utils.ImageTupel;
 import utils.UtilitiesSystem;
 
 

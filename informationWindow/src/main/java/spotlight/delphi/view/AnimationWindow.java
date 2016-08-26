@@ -1,12 +1,14 @@
-package informationWindow.informationWindow.view;
+package spotlight.delphi.view;
 
 import java.awt.Color;
 import java.awt.Point;
 import java.awt.image.BufferedImage;
+
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import informationWindow.informationWindow.utils.Utils;
+
+import spotlight.delphi.utils.Utils;
 
 
 
