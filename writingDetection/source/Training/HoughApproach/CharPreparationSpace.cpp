@@ -52,11 +52,11 @@ CharPreparationSpace::CharPreparationSpace(Vec2d ximgSize, std:: string ximg,
   this->id = xid;
   //
   // Compute normal values
-  this->scales = vector<double>(8);
+  this->scales = vector<double>(14);
   int rScaleHalf = this->scales.size() / 2;
   for (int j = 0; j < rScaleHalf; j++){
-    this->scales[j] = rScaleHalf - j;
-    this->scales[j + rScaleHalf] = 1.0 / (j + 2);
+    this->scales[j] = 1.0 - j * 0.1;
+    this->scales[j + rScaleHalf] = 1.0 + j * 0.1;
   }
   this->rotations = vector<double>(1);
   this->rotations[0] = 0;
@@ -532,7 +532,8 @@ void CharPreparationSpace::findHoughMaxima(vector< vector<Mat> >& houghSpace, ve
     minMaxLoc(maxImage, &min, &max);
 
     // define threshold
-    double threshold = OBJ_THRESH * max;
+    double threshold = OBJ_THRESH * max / 2;
+    //threshold = 0;
 
     // spatial non-maxima suppression
     Mat bin = Mat(houghSpace.at(0).at(0).rows, houghSpace.at(0).at(0).cols, CV_32FC1, -1);
@@ -578,9 +579,10 @@ void CharPreparationSpace::findHoughMaxima(vector< vector<Mat> >& houghSpace, ve
           // create object list entry consisting of scale, angle, and position where object was detected
           Scalar cur;
           cur.val[0] = scale;
-          cur.val[1] = angle;
+          cur.val[1] = (*img).at<float>(y, x);;
           cur.val[2] = x;
-          cur.val[3] = y;      
+          cur.val[3] = y;
+         // cur.val[4] = (*img).at<float>(y, x);
           objList.push_back(cur);
           }
         }
@@ -619,23 +621,17 @@ void CharPreparationSpace::plotHoughDetectionResult(Mat& testImage, vector<Scala
     // for all objects
     for(vector<Scalar>::iterator it = objList.begin(); it != objList.end(); it++){
     
-      std:: cout << ju * 100 / objList.size() << "\n";
       
       // compute scale and angle of current object
       scale = this->scales[it->val[0]];
       angle = this->rotations[it->val[1]];
       ju++;
-      std:: cout << "a1\n";
       // use scale and angle in order to generate new binary mask of template
-      std:: cout << this->templ[0].cols << ", " << this->templ[0].rows  << ", " << angle << ", "  << scale << "\n";
       Mat binMask = rotateAndScale(this->templ[0], angle, scale);
-      std:: cout << binMask.cols << ", " << binMask.rows << "\n";
 
       // perform boundary checks
       Rect binArea = Rect(0, 0, binMask.cols, binMask.rows);
-      std:: cout << "a2\n";
       Rect imgArea = Rect((*it).val[2]-binMask.cols/2., (*it).val[3]-binMask.rows/2, binMask.cols, binMask.rows);
-      std:: cout << "a3\n";
       if ( (*it).val[2]-binMask.cols/2 < 0 ){
         binArea.x = abs( (*it).val[2]-binMask.cols/2 );
         binArea.width = binMask.cols - binArea.x;
@@ -657,7 +653,6 @@ void CharPreparationSpace::plotHoughDetectionResult(Mat& testImage, vector<Scala
         imgArea.height = binArea.height;
       }
 
-      std:: cout << "center\n";
       // copy this object instance in new image of correct size
       tmp.setTo(0);
 
@@ -694,7 +689,6 @@ void CharPreparationSpace::plotHoughDetectionResult(Mat& testImage, vector<Scala
 
       // change red channel
       red = red + tmp*255;
-      std:: cout << "end\n";
     }
     // generate color image
     vector<Mat> color;
@@ -718,7 +712,10 @@ void CharPreparationSpace::plotHoughDetectionResult(Mat& testImage, vector<Scala
 
 
 
-
+Vec2f CharPreparationSpace::getExpansion(float scale ) {
+  // return the size of the image given scale factor
+  return Vec2f(offlineImg.rows * scale, offlineImg.cols * scale);
+}
 
 
 

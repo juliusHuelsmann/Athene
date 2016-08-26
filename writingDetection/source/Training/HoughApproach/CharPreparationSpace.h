@@ -90,6 +90,7 @@
 		  
 		  // Unimportant stuff
       vector<double> getScales();
+      Vec2f getExpansion(float scale ); // return the size of the image given scale factor
       vector<double> getRotations();
       
     private:
