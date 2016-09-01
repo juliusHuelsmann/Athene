@@ -41,7 +41,7 @@
     <dependency>
     	<groupId>com.github.juliusHuelsmann</groupId>
     	<artifactId>JavaUtils</artifactId>
-    	<version>e2387e5</version>
+    	<version>4a2cfc5</version>
     	<scope>compile</scope>
     </dependency>
   </dependencies>

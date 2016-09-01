@@ -8,6 +8,7 @@ import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 
+import opaqueFrame.OpFrame;
 import spotlight.delphi.utils.Utils;
 
 
@@ -25,7 +26,7 @@ import spotlight.delphi.utils.Utils;
  * @since 0.0
  */
 @SuppressWarnings("serial")
-public class AnimationWindow extends JFrame  {
+public class AnimationWindow extends OpFrame  {
   
 
   
@@ -73,7 +74,7 @@ public class AnimationWindow extends JFrame  {
   /**
    * The source image of {@link #bi_enhancedAnimationSource}.
    */
-  private final String enhancedAnimationInputSource = "/informationWindow/informationWindow/res/ani1.png";
+  private final String enhancedAnimationInputSource = "/spotlight/delphi/res/ani1.png";
   
   /**
    * 
@@ -119,7 +120,6 @@ public class AnimationWindow extends JFrame  {
     } else {
       drawSimpleAnimation();
     }
-    
   }
   /**
    * Draw an animation.
