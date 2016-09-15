@@ -81,18 +81,19 @@ public class AnimationWindow extends OpFrame  {
    */
   public AnimationWindow() {
 
+    super(false);
     // initialize the original width and height
     origwidth = 100;
     origheight = 100;
     
     
     // adapt the settings of the Window
-    super.setLayout(null);
     super.setSize(origwidth, origheight);
+//    super.setLayout(null);
     super.setLocation(-getWidth(), -getHeight());
-    super.setDefaultLookAndFeelDecorated(false);
-    super.setOpacity(1);
-    super.setUndecorated(true);
+//    super.setDefaultLookAndFeelDecorated(false);
+//    super.setOpacity(1);
+//    super.setUndecorated(true);
     
     // initialize the animation BufferedImage.
     bi_animation = new BufferedImage(getWidth(), 
@@ -106,11 +107,19 @@ public class AnimationWindow extends OpFrame  {
     }
     
     // initialize the animation JLabel.
-    jlbl_animation = new JLabel();
+    jlbl_animation = new JLabel("blablablabla");
     jlbl_animation.setSize(getSize());
+    jlbl_animation.setOpaque(false);
     jlbl_animation.setLocation(0, 0);
     super.add(jlbl_animation);
+    
+    super.setVisible(false);
+    super.setResizable(false);
     super.setVisible(true);
+  }
+  
+  public static void main(String[]args) {
+    new AnimationWindow().setLocationRelativeTo(null);
   }
 
   
@@ -193,10 +202,14 @@ public class AnimationWindow extends OpFrame  {
                           col.getGreen() * percG + (1 - percG) * colT.getGreen());
                       final double blue = Math.min(255, 
                           col.getBlue() * percB + (1 - percB) * colT.getBlue());
+                      
+                      
+                      final int alpha = (int) (255 - Math.min(percR + percG + percB, 255));
                       Color col2use = new Color(
                           (int) (red),
                           (int) (green),
-                          (int) (blue));
+                          (int) (blue),
+                          alpha);
                       bi_animation.setRGB(c, r, col2use.getRGB());
                     }
                   }
@@ -292,7 +305,8 @@ public class AnimationWindow extends OpFrame  {
   private long mindif;
   public void prepare(
       int imgx, int imgy, 
-      int i, int j, final long mindifference,  BufferedImage bi) {
+      int i, int j, final long mindifference,
+      final int biwidth, final int biheight) {
 
     final int minx = Math.min(imgx, i);
     final int maxx = Math.max(imgx, i);
@@ -310,9 +324,9 @@ public class AnimationWindow extends OpFrame  {
       i -= minx;
       width += minx;
     } 
-    if (maxx + width > bi.getWidth()) {
+    if (maxx + width > biwidth) {
       
-      wdiff = maxx + width - bi.getWidth();
+      wdiff = maxx + width - biwidth;
       width -= wdiff;
     }
     if (miny < 0) {
@@ -321,8 +335,8 @@ public class AnimationWindow extends OpFrame  {
       j -= miny;
       height += miny;
     } 
-    if (maxy + height > bi.getHeight()) {
-      hdiff = maxy + height - bi.getHeight();
+    if (maxy + height > biheight) {
+      hdiff = maxy + height - biheight;
       height -= hdiff;
     }
     
@@ -331,7 +345,7 @@ public class AnimationWindow extends OpFrame  {
     
     this.mindif = mindifference;
     
-    bi_animation = bi.getSubimage(imgx, imgy, getWidth(), getHeight());
+    bi_animation = new BufferedImage(getWidth(), getHeight(), BufferedImage.TYPE_INT_ARGB);
     
     // What remains to update is the #bi_enhancedAnimationSource.
     if (origwidth !=  bi_enhancedAnimationSource.getWidth()

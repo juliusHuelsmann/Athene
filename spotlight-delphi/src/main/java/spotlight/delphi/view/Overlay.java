@@ -12,16 +12,17 @@ import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
-import java.awt.image.BufferedImage;
 
 import javax.swing.JWindow;
 
-import spotlight.delphi.utils.ImageTupel;
 import utils.UtilitiesSystem;
 
 
 /**
  * The overlay window that is used for capturing the clicks.
+ * Is acting according to the settings specified inside the SettingsDelphi 
+ * class.
+ * 
  *
  * @author Julius Huelsmann
  * @version %I%, %U%
@@ -35,12 +36,12 @@ MouseMotionListener, MouseWheelListener {
   /**
    * The window which displays the animation.
    */
-  private AnimationWindow animation;
+//  private AnimationWindow animation;
   
   /**
    * Image Tupel that is recorded on click.
    */
-  private ImageTupel it;
+//  private ImageTupel it;
   
   /**
    * Integer which is used for identifying whether the current image tupel
@@ -49,6 +50,8 @@ MouseMotionListener, MouseWheelListener {
   private int currentClicknumber;
   
   public Overlay() {
+    
+
     try {
       r = new Robot();
     } catch (AWTException e1) {
@@ -66,15 +69,20 @@ MouseMotionListener, MouseWheelListener {
       alpha = 0;
     }
     setBackground(new Color(0, 255, 0, alpha));
-    setVisible(true);
+//    setVisible(true);
     setSize(Toolkit.getDefaultToolkit().getScreenSize());
     addMouseListener(this);
     addMouseMotionListener(this);
     super.addMouseWheelListener(this);
     setAlwaysOnTop(true);
     setFocusable(false);
+
+//    animation = new AnimationWindow();
+//    animation.setLocationRelativeTo(null);
+
+    
+    setVisible(true);
 //    setFullscreen();
-    animation = new AnimationWindow();
     
 //    for(int i = 0; i < 100; i++) {
 //
@@ -164,17 +172,18 @@ MouseMotionListener, MouseWheelListener {
       
       dragged = false;
       setVisible(false); // if linux that is necessary
-      final BufferedImage bi = r.createScreenCapture(getBounds());
+//      final BufferedImage bi = r.createScreenCapture(getBounds());
       setVisible(true);
       currentClicknumber++;
-      it = new ImageTupel(bi, currentClicknumber);
+//      it = new ImageTupel(bi, currentClicknumber);
       savedLocation = e.getLocationOnScreen();
       pTimestamp = System.currentTimeMillis();
-      animation.prepare(
-          e.getX() - animation.getWidth() / 2,
-          e.getY() - animation.getHeight() / 2,
-          e.getX() - animation.getWidth() / 2,
-          e.getYOnScreen() - animation.getHeight() / 2, mindifference, bi);
+//      animation.prepare(
+//          e.getX() - animation.getWidth() / 2,
+//          e.getY() - animation.getHeight() / 2,
+//          e.getX() - animation.getWidth() / 2,
+//          e.getYOnScreen() - animation.getHeight() / 2, mindifference, 
+//          getBounds().width, getBounds().height);
       t_displayTimeout = new Thread() {
         public void run() {
           try {
@@ -182,7 +191,7 @@ MouseMotionListener, MouseWheelListener {
             if (!isInterrupted()) {
               System.out.println("launch animation");
 
-              animation.setVisible(true);
+//              animation.setVisible(true);
             }
           } catch (InterruptedException e) {
           }
@@ -215,7 +224,7 @@ MouseMotionListener, MouseWheelListener {
 
         rTimestamp = System.currentTimeMillis();
         t_displayTimeout.interrupt();
-        animation.setVisible(false);
+//        animation.setVisible(false);
         setVisible(true);
         System.out.println("mousereleased");
       }
@@ -229,8 +238,7 @@ MouseMotionListener, MouseWheelListener {
     public void mouseDragged(MouseEvent e) {
       dragged = true;
         t_displayTimeout.interrupt();
-        it = null;
-        animation.setVisible(false);
+//        animation.setVisible(false);
         setVisible(false);
 
         final int val;
