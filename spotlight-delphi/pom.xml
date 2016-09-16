@@ -18,7 +18,17 @@
 	<id>jitpack.io</id>
 	<url>https://jitpack.io</url>
 	</repository>
+	
+	 <repository>
+    <id>system-hook-mvn-repo</id>
+    <url>https://raw.github.com/kristian/system-hook/mvn-repo/</url>
+    <snapshots>
+      <enabled>true</enabled>
+      <updatePolicy>always</updatePolicy>
+    </snapshots>
+  </repository>
 	</repositories>
+	
   <dependencies>
   
   	<dependency>
@@ -44,6 +54,12 @@
     	<version>e8f6ca2</version>
     	<scope>compile</scope>
     </dependency>
+    
+    <dependency>
+  <groupId>lc.kra.system</groupId>
+  <artifactId>system-hook</artifactId>
+  <version>2.5</version>
+</dependency>
   </dependencies>
   <artifactId>Delphi</artifactId>
 </project>

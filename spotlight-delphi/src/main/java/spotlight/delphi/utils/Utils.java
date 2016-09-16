@@ -7,8 +7,6 @@ import java.io.IOException;
 
 import javax.imageio.ImageIO;
 
-import spotlight.delphi.view.AnimationWindow;
-
 
 public class Utils {
 
@@ -26,7 +24,7 @@ public class Utils {
        
         BufferedImage img_scaled;
       try {
-            img_scaled = ImageIO.read(AnimationWindow.class.getResourceAsStream(_path));
+            img_scaled = ImageIO.read(Utils.class.getResourceAsStream(_path));
         //img_scaled = ImageIO.read(new File(myPath));
           return resize(img_scaled, _width, _height);
       } catch (IOException e) {
