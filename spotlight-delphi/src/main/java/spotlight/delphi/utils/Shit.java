@@ -27,15 +27,6 @@ public class Shit {
         // TODO Auto-generated catch block
         e1.printStackTrace();
       }
-      robot.mouseMove(500, 500);
-      robot.mousePress(InputEvent.BUTTON1_MASK);
-      // robot.mouseMove(660,700);
-      robot.mouseRelease(InputEvent.BUTTON1_MASK);
-      robot.keyPress(KeyEvent.VK_CONTROL); // Select all
-      robot.keyPress(KeyEvent.VK_A);
-      robot.keyRelease(KeyEvent.VK_A);
-      robot.keyRelease(KeyEvent.VK_CONTROL);
-
       robot.keyPress(KeyEvent.VK_CONTROL); // Copy
       robot.keyPress(KeyEvent.VK_C);
       robot.keyRelease(KeyEvent.VK_C);

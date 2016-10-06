@@ -21,6 +21,7 @@ import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
 import java.io.IOException;
+import java.util.logging.Logger;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -41,7 +42,7 @@ import utils.UtilitiesSystem;
  * @since 0.0
  */
 @SuppressWarnings("serial")
-public class Overlay extends JFrame {
+public class Overlay extends JWindow {
  
   
   private JFrame jf;
@@ -50,16 +51,17 @@ public class Overlay extends JFrame {
 
     // Apply a transparent color to the background
     // This is ALL important, without this, it won't work!
-    final int alpha;
+//    final 
+    int alpha;
     final boolean windows = UtilitiesSystem.isWindows();
     if (windows) {
       alpha = 1;
     } else {
       alpha = 0;
     }
+//    alpha += 50;
     
-    super.setBackground(new Color(0, 255, 0, alpha));
-    super.validate();
+    super.setBackground(new Color(100, 120, 90, alpha));
   }
   
   
@@ -68,35 +70,35 @@ public class Overlay extends JFrame {
 
     // Apply a transparent color to the background
     // This is ALL important, without this, it won't work!
-    setUndecorated(true);
+//    setUndecorated(true);
     setVisible(true);
     setTransparent();
     setSize(Toolkit.getDefaultToolkit().getScreenSize());
 
     
-    JLabel jlbl = new JLabel("asdf");
-    jlbl.setSize(100, 100);
-    super.add(jlbl);
     
     MousePressFetcher mpf = new MousePressFetcher(this);
     super.addMouseListener(mpf);
     super.addMouseMotionListener(mpf);
     super.addMouseWheelListener(mpf);
     setAlwaysOnTop(true);
-    setFocusable(false);
+    super.setFocusable(false);
     
     
     jf = new JFrame("Spotlight");
     jf.setUndecorated(true);
     jf.setVisible(true);
+    jf.setAlwaysOnTop(true);
     jf.setSize(30, 30);
     jf.setBackground(new Color(255, 255, 255, 100));
     jf.setLocation(getWidth() - jf.getWidth(), getHeight() - jf.getHeight());
     jf.setResizable(false);
+    jf.setFocusable(false);
     
   }
-    public static void main( String[] args )
-    {new Overlay();}
+    public static void main( String[] args ) {
+    	new Overlay();
+    }
 
 
     /**
@@ -171,41 +173,35 @@ class MousePressFetcher implements MouseListener, MouseWheelListener, MouseMotio
   }
 
   
-  private void copytoclipboard() {
+  private String copytoclipboard() {
     
     // check if clipboard copy
   
   Clipboard c = Toolkit.getDefaultToolkit().getSystemClipboard();
   final Transferable oldData =  c.getContents(this);
   
-  
-  System.out.println("copy paste and enter and other stuff");
-
-  r.keyPress(157);
-  r.delay(40);
+  r.keyPress(KeyEvent.VK_CONTROL); // Copy
   r.keyPress(KeyEvent.VK_C);
-  r.delay(100);
   r.keyRelease(KeyEvent.VK_C);
-  r.delay(40);
-  r.keyRelease(157);
+  r.keyRelease(KeyEvent.VK_CONTROL);
   
   final Transferable newData =  c.getContents(this);
+  String nd = "";
   try {
-    System.out.println("hier \t" + newData.getTransferData(DataFlavor.stringFlavor));
+    nd = "" + newData.getTransferData(DataFlavor.stringFlavor);
   } catch (UnsupportedFlavorException e1) {
-    // TODO Auto-generated catch block
-    e1.printStackTrace();
   } catch (IOException e1) {
-    // TODO Auto-generated catch block
-    e1.printStackTrace();
   }
   c.setContents(oldData, MousePressFetcher.this);
+  return nd;
   }
 
   
   //TODO: check if mouse has been moved. In that case, exit the oepration
     public void mousePressed(MouseEvent e) {
-      copytoclipboard();
+    	
+
+  	  Logger.getLogger("Spotlight").severe("mp");
       // Initialize with not dragged.
       dragged = false;
       pTimestamp = System.currentTimeMillis();
@@ -218,9 +214,6 @@ class MousePressFetcher implements MouseListener, MouseWheelListener, MouseMotio
         }
         
         public void run() {
-          
-          
-          
           try {
             if (!isInterrupted()) {
   
@@ -249,30 +242,25 @@ class MousePressFetcher implements MouseListener, MouseWheelListener, MouseMotio
 
 
   public void mouseReleased(final MouseEvent e) {
-    rTimestamp = System.currentTimeMillis();
-      if (dragged) {
+	  
+
+	  Logger.getLogger("Spotlight").severe("MR");
+	  rTimestamp = System.currentTimeMillis();
+	  if (dragged) {
         ol.setVisible(false);
     
-        final int val;
-        switch(e.getButton()) {
-        case MouseEvent.BUTTON1:
-          val = InputEvent.BUTTON1_DOWN_MASK;
-          break;
-        case MouseEvent.BUTTON2:
-          val = InputEvent.BUTTON2_DOWN_MASK;
-          break;
-        case MouseEvent.BUTTON3:
-          val = InputEvent.BUTTON3_DOWN_MASK;
-          break;
-        default:
-          val = InputEvent.BUTTON1_DOWN_MASK;
-        }
-        r.mousePress(val);
+        r.mouseRelease(getButton(e));
+        dragged = false;
         
         ol.setVisible(true);
-      } else {
+        rTimestamp = 0;
+        pTimestamp = 0;
+        
+        if (t_displayTimeout != null) {
+            t_displayTimeout.interrupt();
+        }
+      } 
 
-      }
     }
 
 
@@ -281,7 +269,8 @@ class MousePressFetcher implements MouseListener, MouseWheelListener, MouseMotio
    * set FullscreenMode.
    */
   public void mouseClicked(final MouseEvent e) {
-    
+
+	  Logger.getLogger("Spotlight").severe("mc\n\n");
     if (dragged) {
       return;
     } else {
@@ -289,31 +278,50 @@ class MousePressFetcher implements MouseListener, MouseWheelListener, MouseMotio
       if (rTimestamp - pTimestamp > mindifference) {
         // action (look up word)
         t_displayTimeout.interrupt();
+
+
+        final String s = copytoclipboard();
         
-    
-        
-        System.out.println(e.getXOnScreen() + ", " + e.getYOnScreen());
+        if (s.equals("")) {
+
+            System.out.println("\t[LOC]\t(" + e.getXOnScreen() + ", " + e.getYOnScreen() + ")");
+        } else {
+
+            System.out.println("\t[STR]\t(" + e.getXOnScreen() + ", " + e.getYOnScreen() + ")\t\"" + s + "\"");	
+        }
 
 //        ol.setTransparent();
       } else {
+      	System.out.println("foreward");
         // no action, let the robot take care of this
         t_displayTimeout.interrupt();
         ol.setTransparent();
 
         ol.setVisible(false);
+        
+        
         final int d = getButton(e);
+        try {
+			Thread.sleep(10);
+		} catch (InterruptedException e1) {
+			e1.printStackTrace();
+		}
         r.mousePress(d);
         r.mouseRelease(d);
-        ol.setVisible(true);
-        
 
-        ol.setTransparent();
-        
+        try {
+			Thread.sleep(10);
+		} catch (InterruptedException e1) {
+			e1.printStackTrace();
+		}
+        ol.setVisible(true);
       }
-      pTimestamp = 0;
-      rTimestamp = 0;
     }
+    pTimestamp = 0;
+    rTimestamp = 0;
   }  
+  
+  
   
   public void mouseWheelMoved(final MouseWheelEvent e) {
       if (tMoveMouseWheel != null) {
@@ -342,25 +350,44 @@ class MousePressFetcher implements MouseListener, MouseWheelListener, MouseMotio
   
   
 
-  public void mouseEntered(MouseEvent e) {
-    
-  }
-  public void mouseExited(MouseEvent e) {
-    
-  }
+  public void mouseEntered(MouseEvent e) { }
+  public void mouseExited(MouseEvent e) { }
   public void mouseDragged(MouseEvent e) {
-    dragged = true;
-      t_displayTimeout.interrupt();
-//      animation.setVisible(false);
-      ol.setVisible(false);
-
-      getButton(e);
-      r.mousePress(getButton(e));
-      ol.setVisible(true);
-  }
-  public void mouseMoved(MouseEvent e) {
+	  
     
+//    if (t_displayTimeout != null) {
+//
+//        t_displayTimeout.interrupt();
+//        t_displayTimeout = null;
+//    }
+//      animation.setVisible(false);
+	  if (!dragged) {
+		    dragged = true;
+		  System.out.println("md");
+	      r.mouseRelease(getButton(e));
+	      try {
+			Thread.sleep(100);
+		} catch (InterruptedException e1) {
+			e1.printStackTrace();
+		}
+	      ol.setVisible(false);
+	      
+	      try {
+			Thread.sleep(100);
+		} catch (InterruptedException e1) {
+			e1.printStackTrace();
+		}
+
+	      r.mousePress(getButton(e));
+	      try {
+			Thread.sleep(100);
+		} catch (InterruptedException e1) {
+			e1.printStackTrace();
+		}
+	      ol.setVisible(true);
+	  }
   }
+  public void mouseMoved(MouseEvent e) { }
 
   private final static int getButton(final MouseEvent e) {
 
